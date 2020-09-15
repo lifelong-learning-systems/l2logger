@@ -50,7 +50,7 @@ class TestClassifTaskLoggingPhases(unittest.TestCase):
             classroom.close()
 
         results = dict_list_to_tuple_list(full_results, 
-                ["class_name", "num_batches", "batch_sizes", "block", "phase_name", "enable_updates"])
+                ["task_name", "num_batches", "batch_sizes", "block", "phase_name", "enable_updates"])
 
         # check the sequence of datasets that were generated
         expected_results = [
@@ -104,7 +104,7 @@ class TestClassifTaskLoggingPhases(unittest.TestCase):
             classroom.close()
 
         results = dict_list_to_tuple_list(full_results, 
-                ["class_name", "num_batches", "batch_sizes", "batch_ids", "block", "phase_name", "enable_updates"])
+                ["task_name", "num_batches", "batch_sizes", "batch_ids", "block", "phase_name", "enable_updates"])
 
         # check the sequence of datasets that were generated
         expected_results = [
@@ -124,7 +124,7 @@ class TestClassifTaskLoggingPhases(unittest.TestCase):
         df = read_log_data(syllabus_log_dir)
         print(df)
 
-        columns=['phase', 'class_name', 'block', 'task', 'batch_id', 'batch_size', 'source']
+        columns=['phase', 'task_name', 'block', 'task', 'batch_id', 'batch_size', 'source']
         expected_logs_df = pd.DataFrame([
             # phase     class        block  task  batch_id batch_size source
             ['1.train',  'numberdata',   0,    0,      0,   100,     'NEXT_BATCH'],
@@ -160,12 +160,12 @@ class TestClassifTaskLoggingPhases(unittest.TestCase):
             ['2.test',  'numberdata2',   7,     7,     1,   100,     'NEXT_BATCH']
             ], columns=columns)
 
-        expected_logs_df.class_name = 'learnkit_sample_classification_tasks_' + expected_logs_df.class_name
-        expected_logs_df.class_name = expected_logs_df.class_name.str.lower()
+        expected_logs_df.task_name = 'learnkit_sample_classification_tasks_' + expected_logs_df.task_name
+        expected_logs_df.task_name = expected_logs_df.task_name.str.lower()
 
         self.assertTrue(compare_dataframes(syllabus_log_dir, expected_logs_df,
                         classes=None,
-                        simplify_class_name=False,
+                        task_name=False,
                         sort_by=['block', 'task', 'batch_id'],
                         columns=columns, blocks=None))
 

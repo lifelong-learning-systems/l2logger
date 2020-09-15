@@ -30,7 +30,7 @@ class TestRLTaskLoggingSubepisodes(unittest.TestCase):
             fcn=lambda episode: run_single_episode_till_totalsteps(episode, total_steps=total_steps))
 
         # only looking at tasks (episode numbers) 0, 1, 4, 5, 36, 37
-        columns=['phase', 'class_name', 'block', 'task', 'sub_task', 'steps', 'termination_status']
+        columns=['phase', 'task_name', 'block', 'task', 'sub_task', 'steps', 'status']
         expected_df = pd.DataFrame([
             # phase     class       block  task  sub_task steps status
             ['train',  'testrltask', 0,      0,      0,     5,  'DONE'],
@@ -70,7 +70,7 @@ class TestRLTaskLoggingEdgeCases(unittest.TestCase):
     def setUp(self):
         self.classroom = learnkit.Classroom()
         self.syllabus_file = module_relative_file(__file__, 'syllabi/testrltasks_simple')
-        self.columns = ['block', 'task', 'sub_task', 'steps', 'termination_status']
+        self.columns = ['block', 'task', 'sub_task', 'steps', 'status']
 
     def test_resetsonly_episodes(self):
         print("\ntest_resetsonly_episodes")
@@ -184,7 +184,7 @@ class TestRLTaskLoggingPhases(unittest.TestCase):
             classroom.close()
 
         # check the sequence of episodes that were generated
-        results = dict_list_to_tuple_list(full_results, ["class_name", "num_steps"])
+        results = dict_list_to_tuple_list(full_results, ["task_name", "num_steps"])
         expected_results = [('learnkit.sample_rl_tasks.HillClimber', 2),
                             ('learnkit.sample_rl_tasks.HillClimber', 6),
                             ('learnkit.sample_rl_tasks.HillClimber', 3),

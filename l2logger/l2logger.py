@@ -4,7 +4,7 @@
 # clauses at DFARS 252.227-7013/7014 or FAR 52.227-14. For any other permission,
 # please contact the Office of Technology Transfer at JHU/APL.
 
-# NO WARRANTY, NO LIABILITY. THIS MATERIAL IS PROVIDED “AS IS.” JHU/APL MAKES NO
+# NO WARRANTY, NO LIABILITY. THIS MATERIAL IS PROVIDED "AS IS." JHU/APL MAKES NO
 # REPRESENTATION OR WARRANTY WITH RESPECT TO THE PERFORMANCE OF THE MATERIALS,
 # INCLUDING THEIR SAFETY, EFFECTIVENESS, OR COMMERCIAL VIABILITY, AND DISCLAIMS
 # ALL WARRANTIES IN THE MATERIAL, WHETHER EXPRESS OR IMPLIED, INCLUDING (BUT NOT
@@ -21,7 +21,6 @@ import re
 import csv
 import time
 from datetime import datetime
-
 
 def _sanitize_task_name(name):
     return re.sub('[.]', '_', name).lower()
@@ -83,6 +82,7 @@ class DataLog(TSVLogFile):
         self._standard_fields = None
 
     def order_fieldnames(self, fieldnames):
+        # TODO: should be ordered sets?
         fieldnames_set = set(fieldnames)
         standard_fields_set = set(self._standard_fields)
         if not fieldnames_set.issuperset(standard_fields_set):
@@ -92,22 +92,25 @@ class DataLog(TSVLogFile):
         return updated_fields
 
 
+# hierarchy: block_sequence, sub_task (local to block), task (global across blocks)
 class RLDataLog(DataLog):
     def __init__(self, *args):
         super().__init__(*args)
+        # self._standard_fields = [
+        #     'timestamp', 'phase', 'worker', 'task_name',
+        #     'regime_num', 'seed', 'exp_num', 'sub_task',
+        #     'steps', 'status', 'source']
         self._standard_fields = [
-            'timestamp', 'phase', 'worker', 'class_name',
-            'block', 'seed', 'task', 'sub_task',
-            'steps', 'termination_status', 'source']
+            'block_num', 'regime_num', 'exp_num', 'status', 'timestamp'
+        ]
 
 
 class ClassifDataLog(DataLog):
     def __init__(self, *args):
         super().__init__(*args)
         self._standard_fields = [
-            'timestamp', 'phase', 'worker', 'class_name',
-            'block', 'seed', 'task', 'sub_task',
-            'batch_id', 'batch_size', 'source']
+            'block_num', 'regime_num', 'exp_num', 'timestamp'
+        ]
 
 
 class BlocksLog(TSVLogFile):
@@ -116,7 +119,7 @@ class BlocksLog(TSVLogFile):
         super().__init__(log_file_name)
 
     def order_fieldnames(self, fieldnames):
-        standard_fields = ['phase', 'worker', 'class_name', 'block', 'params']
+        standard_fields = ['block_num', 'regime_num', 'block_type', 'worker', 'task_name', 'params']
         if set(standard_fields) != set(fieldnames):
             print(standard_fields)
             print(fieldnames)
@@ -146,7 +149,7 @@ class PerformanceLogger():
     def _check_and_update_context(self, state: dict):
         # keys: worker, phase_filename, task
         new_logging_context = (state['syllabus_dirname'], state['worker_dirname'],
-                               state['phase_dirname'], state['class_dirname'])
+                               state['phase_dirname'], state['task_dirname'])
 
         if new_logging_context != self._logging_context:
             self.close_logs()
@@ -173,7 +176,7 @@ class PerformanceLogger():
             'syllabus_dirname': extrainfo['syllabus_dirname'],
             'worker_dirname': extrainfo['worker_dirname'],
             'phase_dirname': extrainfo['phase_dirname'],
-            'class_dirname': record['class_name']
+            'task_dirname': record['task_name']
         })
         if not update_context_only:
             self.blocks_log.add_row(record)

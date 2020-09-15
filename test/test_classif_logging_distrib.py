@@ -49,7 +49,7 @@ class QueueWorker(threading.Thread):
             with self.classroom.load("datasets") as syllabus:
                 for dataset in syllabus.datasets():
                     results = run_single_dataset_till_done(dataset)
-                    self.results_queue.put((self.name, results['class_name'], dataset.info.phase_name,
+                    self.results_queue.put((self.name, results['task_name'], dataset.info.phase_name,
                                             dataset.info.block_number, dataset.count, results['num_batches'], 
                                             results['batch_sizes'],
                                             tuple(dataset.info.custom.keys()), dataset.info.enable_updates ))
@@ -91,7 +91,7 @@ def run_classroom_with_workers(classroom, syllabus_file, num_workers=3):
         while not results_queue.empty():
             results.append(list(results_queue.get(False)))
 
-        df = pd.DataFrame(results, columns=["worker", "class_name", "phase", "block", "task", 
+        df = pd.DataFrame(results, columns=["worker", "task_name", "phase", "block", "task", 
                                             "num_batches", "batch_sizes", "custom_info", "enable_updates"])
         df = df.sort_values(by="task").reset_index(drop=True)
         logdir = syllabus.log_dir
@@ -120,7 +120,7 @@ class TestDistributedLogging(unittest.TestCase):
 
         print(results_df)
 
-        columns = ["worker", "class_name", "phase", "block", "task", "num_batches", "batch_sizes", "custom_info", "enable_updates"]
+        columns = ["worker", "task_name", "phase", "block", "task", "num_batches", "batch_sizes", "custom_info", "enable_updates"]
         expected_df = pd.DataFrame([
             # "worker", "class",   "phase", "block", "task", "num_batches", batch_sizes, "custom_info", "enable_updates"
             # phase 1.train
@@ -141,7 +141,7 @@ class TestDistributedLogging(unittest.TestCase):
             ['w2', 'NumberData2', '2.test',   7, 11, 2,  [225, 175],      (), False]
         ], columns=columns)
 
-        expected_df.class_name = 'learnkit.sample_classification_tasks.' + expected_df.class_name
+        expected_df.task_name = 'learnkit.sample_classification_tasks.' + expected_df.task_name
 
         if not results_df.equals(expected_df):
             print("------- expected results")
@@ -150,7 +150,7 @@ class TestDistributedLogging(unittest.TestCase):
             print(results_df)
             self.fail("dataframes mismatch")
 
-        columns = ["worker", "class_name", "phase", "block", "task", "batch_id", "batch_size"]
+        columns = ["worker", "task_name", "phase", "block", "task", "batch_id", "batch_size"]
         expected_logs_df = pd.DataFrame([
             # "worker", "class",   "phase", "block", "task", "batch_id", batch_size
             # phase 1.train -----------------------
@@ -194,8 +194,8 @@ class TestDistributedLogging(unittest.TestCase):
             ['w2', 'NumberData2', '2.test',   7,     11,      1,         175]
         ], columns=columns)
 
-        expected_logs_df.class_name = 'learnkit_sample_classification_tasks_' + expected_logs_df.class_name
-        expected_logs_df.class_name = expected_logs_df.class_name.str.lower()
+        expected_logs_df.task_name = 'learnkit_sample_classification_tasks_' + expected_logs_df.task_name
+        expected_logs_df.task_name = expected_logs_df.task_name.str.lower()
         print(syllabus_log_dir)
         self.assertTrue(compare_dataframes(syllabus_log_dir, expected_logs_df,
                         columns=columns, classes=None,
