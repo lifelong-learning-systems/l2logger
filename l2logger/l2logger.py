@@ -129,14 +129,14 @@ class BlocksLog(TSVLogFile):
 
 
 class PerformanceLogger():
-    def __init__(self, toplevel_dir, column_info=[], syllabus_info=None):
+    def __init__(self, toplevel_dir, column_list=[], syllabus_info=None):
         self._toplevel_dir = toplevel_dir
 
-        # TODO: determine what constraints to put on column_info and syllabus_info
+        # TODO: determine what constraints to put on column_list and syllabus_info
         # syllabus_info is object containing whatever the caller desires
-        # for now, column_info = list of names of metric_computable columns
-        assert(all(isinstance(s, str) for s in column_info))
-        self._column_info = column_info
+        # for now, column_list = list of names of metric_computable columns
+        assert(all(isinstance(s, str) for s in column_list))
+        self._column_list = column_list
         # coalesce if the syllabus_info object is false-y
         self._syllabus_info = syllabus_info or {}
 
@@ -168,20 +168,20 @@ class PerformanceLogger():
                 self._toplevel_dir, os.path.sep.join(new_logging_context))
             os.makedirs(self._logging_dir, exist_ok=True)
             self._logging_context = new_logging_context
-            # TODO: is this where we should put the creation of the column_info and syllabus_info json files?
+            # TODO: is this where we should put the creation of the column_list and syllabus_info json files?
             # also, paths are hard-coded whoops
             syllabus_dir = os.path.sep.join((self._toplevel_dir, state['syllabus_dirname']))
-            column_info_path = os.path.sep.join((syllabus_dir, "column_metric_info.json"))
+            column_list_path = os.path.sep.join((syllabus_dir, "column_metric_list.json"))
             syllabus_info_path = os.path.sep.join((syllabus_dir, "syllabus_info.json"))
-            self.write_info_files(column_info_path, syllabus_info_path)
+            self.write_info_files(column_list_path, syllabus_info_path)
             self.data_log = self._data_logger_class(self._logging_dir)
             self.blocks_log = self._blocks_logger_class(self._logging_dir)
 
-    def write_info_files(self, column_info_path, syllabus_info_path):
+    def write_info_files(self, column_list_path, syllabus_info_path):
         # For now, open the info json files, then create the file (exist already is not ok)
-        if not os.path.exists(column_info_path):
-            with open(column_info_path, 'w+') as column_file:
-                column_file.write(json.dumps(self._column_info))
+        if not os.path.exists(column_list_path):
+            with open(column_list_path, 'w+') as column_file:
+                column_file.write(json.dumps(self._column_list))
         if not os.path.exists(syllabus_info_path):
             with open(syllabus_info_path, 'w+') as syllabus_file:
                 syllabus_file.write(json.dumps(self._syllabus_info))
