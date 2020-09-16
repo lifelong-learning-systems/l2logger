@@ -20,6 +20,7 @@ import os
 import re
 import csv
 import time
+import json
 from datetime import datetime
 
 def _sanitize_task_name(name):
@@ -128,8 +129,17 @@ class BlocksLog(TSVLogFile):
 
 
 class PerformanceLogger():
-    def __init__(self, toplevel_dir):
+    def __init__(self, toplevel_dir, column_info=[], syllabus_info=None):
         self._toplevel_dir = toplevel_dir
+
+        # TODO: determine what constraints to put on column_info and syllabus_info
+        # syllabus_info is object containing whatever the caller desires
+        # for now, column_info = list of names of metric_computable columns
+        assert(all(isinstance(s, str) for s in column_info))
+        self._column_info = column_info
+        # coalesce if the syllabus_info object is false-y
+        self._syllabus_info = syllabus_info or {}
+
         self._logging_dir = None
         self.data_log = None
         self.blocks_log = None
@@ -158,8 +168,23 @@ class PerformanceLogger():
                 self._toplevel_dir, os.path.sep.join(new_logging_context))
             os.makedirs(self._logging_dir, exist_ok=True)
             self._logging_context = new_logging_context
+            # TODO: is this where we should put the creation of the column_info and syllabus_info json files?
+            # also, paths are hard-coded whoops
+            syllabus_dir = os.path.sep.join((self._toplevel_dir, state['syllabus_dirname']))
+            column_info_path = os.path.sep.join((syllabus_dir, "column_metric_info.json"))
+            syllabus_info_path = os.path.sep.join((syllabus_dir, "syllabus_info.json"))
+            self.write_info_files(column_info_path, syllabus_info_path)
             self.data_log = self._data_logger_class(self._logging_dir)
             self.blocks_log = self._blocks_logger_class(self._logging_dir)
+
+    def write_info_files(self, column_info_path, syllabus_info_path):
+        # For now, open the info json files, then create the file (exist already is not ok)
+        if not os.path.exists(column_info_path):
+            with open(column_info_path, 'w+') as column_file:
+                column_file.write(json.dumps(self._column_info))
+        if not os.path.exists(syllabus_info_path):
+            with open(syllabus_info_path, 'w+') as syllabus_file:
+                syllabus_file.write(json.dumps(self._syllabus_info))
 
     def close_logs(self):
         if self.data_log:
