@@ -173,11 +173,11 @@ class PerformanceLogger():
             syllabus_dir = os.path.sep.join((self._toplevel_dir, state['syllabus_dirname']))
             column_list_path = os.path.sep.join((syllabus_dir, "column_metric_list.json"))
             syllabus_info_path = os.path.sep.join((syllabus_dir, "syllabus_info.json"))
-            self.write_info_files(column_list_path, syllabus_info_path)
+            self._write_info_files(column_list_path, syllabus_info_path)
             self.data_log = self._data_logger_class(self._logging_dir)
             self.blocks_log = self._blocks_logger_class(self._logging_dir)
 
-    def write_info_files(self, column_list_path, syllabus_info_path):
+    def _write_info_files(self, column_list_path, syllabus_info_path):
         # For now, open the info json files, then create the file (exist already is not ok)
         if not os.path.exists(column_list_path):
             with open(column_list_path, 'w+') as column_file:
@@ -196,11 +196,11 @@ class PerformanceLogger():
     def get_readable_timestamp(cls):
         return datetime.now().strftime('%Y%m%dT%H%M%S.%f')
 
-    def write_to_blocks_log(self, record: dict, extrainfo: dict, update_context_only=False):
+    def write_to_blocks_log(self, record: dict, scenario_info: dict, update_context_only=False):
         self._check_and_update_context({
-            'syllabus_dirname': extrainfo['syllabus_dirname'],
-            'worker_dirname': extrainfo['worker_dirname'],
-            'phase_dirname': extrainfo['phase_dirname'],
+            'syllabus_dirname': scenario_info['scenario_dirname'],
+            'worker_dirname': scenario_info['worker_dirname'],
+            'phase_dirname': scenario_info['block_dirname'],
             'task_dirname': record['task_name']
         })
         if not update_context_only:
@@ -217,6 +217,7 @@ class RLPerformanceLogger(PerformanceLogger):
         self._blocks_logger_class = BlocksLog
 
 
+# TODO: determine differences between this and RLPerformanceLogger
 class ClassifPerformanceLogger(PerformanceLogger):
     def __init__(self, *args):
         super().__init__(*args)

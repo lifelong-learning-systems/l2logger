@@ -1,0 +1,35 @@
+{
+    "logging_base": "logs_trivial_example",
+    "threads": 4,
+    "blocks": [
+        {
+            "type": "train",
+            "regimes": [
+                { "task": "TASK_A", "length": 100, "args": [] }
+            ]
+        },
+        {
+            "type": "test",
+            "regimes": [
+                { "task": "TASK_A", "length": 50, "args": [] },
+                { "task": "TASK_B", "length": 50, "args": [] }
+            ]
+        },
+        {
+            "type": "train",
+            "regimes": [
+                { "task": "TASK_B", "length": 500, "args": [] },
+                { "task": "TASK_A", "length": 100, "args": [] },
+                { "task": "TASK_B", "length": 100, "args": [] },
+                { "task": "TASK_A", "length": 500, "args": [] }
+            ]
+        },
+        {
+            "type": "test",
+            "regimes": [
+                { "task": "TASK_A", "length": 50, "args": [] },
+                { "task": "TASK_B", "length": 50, "args": [] }
+            ]
+        }
+    ]
+}
