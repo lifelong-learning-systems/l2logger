@@ -27,11 +27,11 @@ def _sanitize_task_name(name):
     return re.sub('[.]', '_', name).lower()
 
 
-def get_log_foldername(path, format_str="{syllabus}-{timestamp}"):
-    syllabus_name = os.path.basename(os.path.basename(path)).split('.')[0]
+def get_log_foldername(path, format_str="{scenario}-{timestamp}"):
+    scenario_name = os.path.basename(os.path.basename(path)).split('.')[0]
     # int(round(time.time() * 1000))
     timestamp = re.sub('[.]', '-', str(time.time()))
-    return format_str.format(syllabus=syllabus_name, timestamp=timestamp)
+    return format_str.format(scenario=scenario_name, timestamp=timestamp)
 
 
 class TSVLogFile():
@@ -97,10 +97,6 @@ class DataLog(TSVLogFile):
 class RLDataLog(DataLog):
     def __init__(self, *args):
         super().__init__(*args)
-        # self._standard_fields = [
-        #     'timestamp', 'phase', 'worker', 'task_name',
-        #     'regime_num', 'seed', 'exp_num', 'sub_task',
-        #     'steps', 'status', 'source']
         self._standard_fields = [
             'block_num', 'regime_num', 'exp_num', 'status', 'timestamp'
         ]
@@ -129,16 +125,16 @@ class BlocksLog(TSVLogFile):
 
 
 class PerformanceLogger():
-    def __init__(self, toplevel_dir, column_list=[], syllabus_info=None):
+    def __init__(self, toplevel_dir, column_list=[], scenario_info=None):
         self._toplevel_dir = toplevel_dir
 
-        # TODO: determine what constraints to put on column_list and syllabus_info
-        # syllabus_info is object containing whatever the caller desires
+        # TODO: determine what constraints to put on column_list and scenario_info
+        # scenario_info is object containing whatever the caller desires
         # for now, column_list = list of names of metric_computable columns
         assert(all(isinstance(s, str) for s in column_list))
         self._column_list = column_list
-        # coalesce if the syllabus_info object is false-y
-        self._syllabus_info = syllabus_info or {}
+        # coalesce if the scenario_info object is false-y
+        self._scenario_info = scenario_info or {}
 
         self._logging_dir = None
         self.data_log = None
@@ -158,8 +154,8 @@ class PerformanceLogger():
 
     def _check_and_update_context(self, state: dict):
         # keys: worker, phase_filename, task
-        new_logging_context = (state['syllabus_dirname'], state['worker_dirname'],
-                               state['phase_dirname'], state['task_dirname'])
+        new_logging_context = (state['scenario_dirname'], state['worker_dirname'],
+                               state['block_dirname'], state['task_dirname'])
 
         if new_logging_context != self._logging_context:
             self.close_logs()
@@ -168,23 +164,23 @@ class PerformanceLogger():
                 self._toplevel_dir, os.path.sep.join(new_logging_context))
             os.makedirs(self._logging_dir, exist_ok=True)
             self._logging_context = new_logging_context
-            # TODO: is this where we should put the creation of the column_list and syllabus_info json files?
+            # TODO: is this where we should put the creation of the column_list and scenario_info json files?
             # also, paths are hard-coded whoops
-            syllabus_dir = os.path.sep.join((self._toplevel_dir, state['syllabus_dirname']))
-            column_list_path = os.path.sep.join((syllabus_dir, "column_metric_list.json"))
-            syllabus_info_path = os.path.sep.join((syllabus_dir, "syllabus_info.json"))
-            self._write_info_files(column_list_path, syllabus_info_path)
+            scenario_dir = os.path.sep.join((self._toplevel_dir, state['scenario_dirname']))
+            column_list_path = os.path.sep.join((scenario_dir, "column_metric_list.json"))
+            scenario_info_path = os.path.sep.join((scenario_dir, "scenario_info.json"))
+            self._write_info_files(column_list_path, scenario_info_path)
             self.data_log = self._data_logger_class(self._logging_dir)
             self.blocks_log = self._blocks_logger_class(self._logging_dir)
 
-    def _write_info_files(self, column_list_path, syllabus_info_path):
+    def _write_info_files(self, column_list_path, scenario_info_path):
         # For now, open the info json files, then create the file (exist already is not ok)
         if not os.path.exists(column_list_path):
             with open(column_list_path, 'w+') as column_file:
                 column_file.write(json.dumps(self._column_list))
-        if not os.path.exists(syllabus_info_path):
-            with open(syllabus_info_path, 'w+') as syllabus_file:
-                syllabus_file.write(json.dumps(self._syllabus_info))
+        if not os.path.exists(scenario_info_path):
+            with open(scenario_info_path, 'w+') as scenario_file:
+                scenario_file.write(json.dumps(self._scenario_info))
 
     def close_logs(self):
         if self.data_log:
@@ -196,11 +192,11 @@ class PerformanceLogger():
     def get_readable_timestamp(cls):
         return datetime.now().strftime('%Y%m%dT%H%M%S.%f')
 
-    def write_to_blocks_log(self, record: dict, scenario_info: dict, update_context_only=False):
+    def write_to_blocks_log(self, record: dict, directory_info: dict, update_context_only=False):
         self._check_and_update_context({
-            'syllabus_dirname': scenario_info['scenario_dirname'],
-            'worker_dirname': scenario_info['worker_dirname'],
-            'phase_dirname': scenario_info['block_dirname'],
+            'scenario_dirname': directory_info['scenario_dirname'],
+            'worker_dirname': directory_info['worker_dirname'],
+            'block_dirname': directory_info['block_dirname'],
             'task_dirname': record['task_name']
         })
         if not update_context_only:
