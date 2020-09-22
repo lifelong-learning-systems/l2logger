@@ -19,3 +19,6 @@ For a detailed explanation of the provided functions, see
 
 ## Examples
 See documentation in the examples folder at [examples/README.md](./examples/README.md)
+
+## Tests
+See documentation in the test folder at [test/README.md](./test/README.md)
