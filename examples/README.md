@@ -1,6 +1,6 @@
 # Lifelong Learning Logger Examples
 
-## mock_ml_workflow
+## mock_simple_workflow
 
 Demonstrates a very simple mock RL workflow which would utilize the logger
 library. Consists of three files:
@@ -20,7 +20,7 @@ library. Consists of three files:
 
 Ensure the l2 virtual environment is active, then run simply via:
 ```
-cd mock_ml_workflow
+cd mock_simple_workflow
 python driver.py
 ```
 It will create logs in whichever relative folder is specified in the 
@@ -28,19 +28,31 @@ It will create logs in whichever relative folder is specified in the
 Repeated invocations will create their own scenario folders, with the 
 timestamp included as part of the name, as suggested.
 
-## trivial
+## mock_parallel_workflow
 
-Demonstrates usage of multiprocessing with the logging library; is very much 
-a work in progress, but demonstrates the usefulness of having each worker have 
-its own folder within the scenario directory.
+Demonstrates usage of multiprocessing with the logging library.
+In this example, the logging and agent aspects of the program are mostly
+handled together in the `LoggerInfo` class within `parallel_helper.py`, while
+`parallel_example.py` focuses on enabling the parallel aspects of the script.
+For this reason, please ensure you're first familiar with the simple example.
+
+This example also demonstrates the usefulness of each worker having 
+its own folder within the scenario directory, to simplify synchronization as
+each process gets its own copy of the logger instance.
 
 Ensure the l2 virtual environment is active, then run simply via:
 ```
-cd trivial
-python trivial_example.py input_trivial.json
+cd mock_parallel_workflow
+python parallel_example.py input_parallel.json
 ```
 It will create logs in whichever relative folder is specified in the 
-`logging_base` field within `input_trivial.json`
+`logging_base` field within `input_parallel.json`
+
+You can speciy the number of workers/processes via changing the `threads`
+field within `input_parallel.json` as well.
 
 ## Tips
-Make sure to not add logs in example to git
+- Make sure to not add logs produced from the examples to git
+- On certain Windows environments, the `mock_parallel_workflow` example may
+  produce an error or inconsistent output; for this reason, we highly suggest
+  using Ubuntu 18 or macOS for experimenting with the parallel example.
