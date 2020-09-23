@@ -54,7 +54,7 @@ From the directory structure, `scenario_dirname` should be the name of a
 specific run of a given scenario (e.g. the scenario name followed by a
 timestamp, like `simple-1600697775-609517`).
 Within this folder are `scenario_info.json` and `column_info.json`; see
-[interface.md/#Initialization](./interface.md/#Initialization) for
+the 'Initialization' section in [interface.md](./interface.md) for
 explanation of their contents.
 
 Still within this top-level scenario directory, each

@@ -16,11 +16,11 @@ The logger takes three input arguments, only the first of which is required:
     - dict of column data desired by the developer. Object is required to
     contain at minimum 'metrics_columns', a list of columns which metrics can
     be computed on. This is primarily used by `l2metrics` as a validation step
-    - See [here](./examples/example_column_info.json) for an example file
+    - See [here](../examples/example_column_info.json) for an example file
 - `scenario_info` (default: `{}`):
   - the dict of meta data desired by the developer. There are no requirements
   on what this object contains, but for example could be 'author', or 'version'
-  - See [here](./examples/example_scenario_info.json) for an example file
+  - See [here](../examples/example_scenario_info.json) for an example file
 
 Thus, an example instantiation of the logger is as follows:
 ```
@@ -45,7 +45,7 @@ zero-indexed counts:
 - **Note that the client is responsible for incrementing/managing these
   sequences; the l2metrics module relies on them extensively**
     - For details/examples of what these sequences should look like, see
-    [definitions.md/#Example](./definitions.md/#Example)
+    the 'Example' section within [definitions.md](./definitions.md)
   
 
 ### `write_new_regime`:

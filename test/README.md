@@ -19,7 +19,7 @@ python test_simple_logging.py
 - test_stress_directory
     - performs many invocations of `write_new_regime`, to test that the 
       directory structure is created appropriately
-- test_one_block
+<!-- - test_one_block
     - tests a single `write_new_regime` and several `write_to_data_log`,
     ensuring the `data-log.tsv` and `block-report.tsv` files are created
-    - TODO: ensure the log files have the correct content as well
+    - TODO: ensure the log files have the correct content as well -->

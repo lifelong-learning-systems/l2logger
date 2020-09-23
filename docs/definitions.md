@@ -38,7 +38,7 @@ would apply as such:
     - `Regime`
       - regime_num: 0
       - 100 repetitions of Task_A, with desired parameters
-      - `Experience`:
+      - `Experiences`:
          - exp_num: 0-99
          - actually run/update model on an episode of Task_A 
   - `Block`
@@ -47,12 +47,12 @@ would apply as such:
     - `Regime`
       - regime_num: 1
       - 50 repetitions of Task_A, with desired parameters
-      - `Experience`:
+      - `Experiences`:
          - exp_num: 100-149
          - actually run/evaluate model on an episode of Task_A 
     - `Regime`
       - regime_num: 2
       - 50 repetitions of Task_B, with desired parameters
-      - `Experience`:
+      - `Experiences`:
          - exp_num: 150-199
          - actually run/evaluate model on an episode of Task_B
