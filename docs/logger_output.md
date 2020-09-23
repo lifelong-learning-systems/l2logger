@@ -14,25 +14,25 @@ logging_base_dir
     └───worker-0
     │   └───block-0
     │   │    └───task-0
-    │   │    │    │   block-report.tsv
+    │   │    │    │   block-info.tsv
     │   │    │    │   data-log.tsv
     │   │    │ 
     │   │    ...
     │   │    │
     │   │    └───task-n
-    │   │         │   block-report.tsv
+    │   │         │   block-info.tsv
     │   │         │   data-log.tsv
     │   ...
     │   │
     │   └───block-n
     │        └───task-0
-    │        │    │   block-report.tsv
+    │        │    │   block-info.tsv
     │        │    │   data-log.tsv
     │        │ 
     │        ...
     │        │
     │        └───task-n
-    │             │   block-report.tsv
+    │             │   block-info.tsv
     │             │   data-log.tsv
     │    
     │   
@@ -64,19 +64,19 @@ that the worker consumed experiences on (e.g. '0-train', '1-test', etc).
 Within these block directories, there are then folders for each different task
 that these consumed experiences entailed (e.g. 'Env-A-5x5', 'Env-B-2x2', etc.).
 Finally within these task folders are the actual TSV log files: 
-`block-report.tsv` and `data-log.tsv`. 
+`block-info.tsv` and `data-log.tsv`. 
 
 The interface for providing this information to the logger, as well as 
 details on the contents of the TSV files, is explained in
 more detail in [interface.md](./interface.md) as well as below.
-In brief, `block-report.tsv` contains information about the regimes that
+In brief, `block-info.tsv` contains information about the regimes that
 were worked in, while `data-log.tsv` contains information about each
 experience consumed.
 
 
 ## Example Output
 
-### main_thread/0-train/Task_A/block-report.tsv
+### main_thread/0-train/Task_A/block-info.tsv
 
 block_num | regime_num | block_type | worker | task_name | params
 --- | --- | --- | --- | --- | ---
@@ -96,15 +96,15 @@ block_num | regime_num | exp_num | status | timestamp | reward
 
 ### Explanation
 
-- Information from the block report:
+- Information from the block info file:
     - We can see that the block has two regimes, varying which parameters
     (`params`) have been passed into Task_A (`task_name`)
     - Thus, the `block_num` is 0 and the `regime_num` goes from 0 to 1 as
     well
     - The `worker` is 'main_thread', as shown in both the directory structure
-    and the content of the block report.
+    and the content of the block info file.
 - Information from the data log:
-    - The `block_num` and `regime_num` match those within the block report
+    - The `block_num` and `regime_num` match those within the block info file
     - The worker consumed three experiences for each regime
         - Note that all `nums` are increasing globally, never resetting
           back to zero

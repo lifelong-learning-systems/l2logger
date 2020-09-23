@@ -21,5 +21,5 @@ python test_simple_logging.py
       directory structure is created appropriately
 <!-- - test_one_block
     - tests a single `write_new_regime` and several `write_to_data_log`,
-    ensuring the `data-log.tsv` and `block-report.tsv` files are created
+    ensuring the `data-log.tsv` and `block-info.tsv` files are created
     - TODO: ensure the log files have the correct content as well -->

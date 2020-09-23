@@ -53,7 +53,7 @@ This function should typically be called at the start of
 a new regime for a given worker.
 It sets the "logging context" (i.e. creates the directory
 structure for a particular "worker-block-task" combination), as well as
-appends a row to the `block-report.tsv` file therein.
+appends a row to the `block-info.tsv` file therein.
 Subsequent calls to `write_to_data_log` will use this "logging context" as the
 directory in which `data-log.tsv` will be appended to; as such, this function 
 **must** be invoked at least once before a call to `write_to_data_log`.
@@ -68,7 +68,7 @@ directory in which `data-log.tsv` will be appended to; as such, this function
         - `task_name`: str, current task (e.g. 'Task-A-5x5')
         - `params`: str, JSON string of any parameters for the task ('size', etc.)
     - If more fields are provided than these in record, they will simply be
-    appended as additional columns in blocks-report.tsv. Note that all records
+    appended as additional columns in block-info.tsv. Note that all records
     should have the same number of columns (i.e., if extra fields are
     supplied for one row in the data log, they should be supplied for all the
     other rows as well).

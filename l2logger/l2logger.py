@@ -112,7 +112,7 @@ class ClassifDataLog(DataLog):
 
 class BlocksLog(TSVLogFile):
     def __init__(self, output_dir):
-        log_file_name = os.path.join(output_dir, "block-report.tsv")
+        log_file_name = os.path.join(output_dir, "block-info.tsv")
         super().__init__(log_file_name)
 
     def order_fieldnames(self, fieldnames):
