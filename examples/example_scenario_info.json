@@ -1,0 +1,64 @@
+{
+  "author": "JHU APL",
+  "input_file": {
+    "logging_base_dir": "logs_simple",
+    "scenario": [
+      {
+        "type": "train",
+        "regimes": [
+          {
+            "task": "A",
+            "count": 100
+          }
+        ]
+      },
+      {
+        "type": "test",
+        "regimes": [
+          {
+            "task": "A",
+            "count": 50
+          },
+          {
+            "task": "B",
+            "count": 50
+          }
+        ]
+      },
+      {
+        "type": "train",
+        "regimes": [
+          {
+            "task": "B",
+            "count": 250
+          },
+          {
+            "task": "A",
+            "count": 150
+          },
+          {
+            "task": "B",
+            "count": 50
+          },
+          {
+            "task": "A",
+            "count": 50
+          }
+        ]
+      },
+      {
+        "type": "test",
+        "regimes": [
+          {
+            "task": "A",
+            "count": 100
+          },
+          {
+            "task": "B",
+            "count": 100
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -6,7 +6,7 @@ HERE = pathlib.Path(__file__).parent
 
 setup(
     name='l2logger',
-    version='0.1.1',
+    version='0.1.0',
     description='Lifelong learning logger',
     long_description=(HERE / 'README.md').read_text(),
     long_description_content_type='text/markdown',
