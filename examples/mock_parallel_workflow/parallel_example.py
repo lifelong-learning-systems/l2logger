@@ -1,4 +1,7 @@
-# Multithreaded, call logger functions, etc.
+# Main script for the mock_parallel_workflow logger example.
+# This uses a simplified parallelized strategy to create and 
+# assign tasks to workers, logging output as they go.
+
 import os
 import sys
 import json
@@ -47,16 +50,27 @@ def spawn_workers(logger_info, regime_info, exp_num_queue):
         w.start()
     for w in workers:
         w.join()
-    
-    #print(f'Block {block_num} Regime {regime_num}: Done!')
 
+'''
+The parallelization strategy used here:
+* for each regime
+    - N workers are spawned to consume experiences from the queue
+    - At the end of the regime, the workers are shut down
+* Since the block, regime, and experience numbers are globally consistent,
+the data produced by the workers can be easily ordered globally as well
+
+Note a few simplifications employed here for the purpose of example
+* Workers do not synchronize agent state at end of the regime (i.e. updating the model)
+* The N workers are spawned fresh for every regime, rather than using a pool
+* There is no batching of experiences; each is grabbed one-by-one by the next available worker
+
+'''
 def start(logger_info):
     regime_num = 0
     exp_num_queue = Queue()
     regime_exp_start = 0
     for block_num, block in enumerate(logger_info.data['blocks']):
         block_type = block['type']
-        #print(f'Starting block {block_num} with type: {block_type}'):
         # increment regime globally across blocks
         for regime in block['regimes']:
             n = regime['length']

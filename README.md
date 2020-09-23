@@ -4,21 +4,28 @@ The Lifelong Learning Logger is a utility library provided for
 producing logs in a convenient format for the provided l2metrics module,
 but can also be used independently.
 
+## Logger Term Definitions/Glossary
+Highly recommend starting here, detailed explanation of the terms used 
+throughout: [docs/definitions.md](./docs/definitions.md)
 
-## Logger Output and Structure
+## Logger Output/Structure 
 Detailed explanations of the logging output structure/format can be seen via
-[docs/LOGGER_OUTPUT.md](./docs/LOGGER_OUTPUT.md).
+[docs/logger_output.md](./docs/logger_output.md).
 
 ## Interface/Usage
 At a high level, the library is used simply by creating an
-instance of the logger object, then by invoking the `write_blocks_to_log`
+instance of the logger object, then by invoking the `write_new_regime`
 and `write_data_to_log` member functions on it when desired.
 
 For a detailed explanation of the provided functions, see
-[docs/INTERFACE.md](./docs/INTERFACE.md)
+[docs/interface.md](./docs/interface.md)
 
 ## Examples
 See documentation in the examples folder at [examples/README.md](./examples/README.md)
 
 ## Tests
 See documentation in the test folder at [test/README.md](./test/README.md)
+
+## Changelog
+See [CHANGELOG.md](./CHANGELOG.md) for a list of notable changes to the
+project

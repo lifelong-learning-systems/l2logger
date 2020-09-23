@@ -26,10 +26,15 @@ class TestSimpleScenarios(unittest.TestCase):
             app.consume_experiences()
             # TODO: validate logger output
 
+    def test_meta_files_default(self):
+        print('\ntest_meta_files_default')
+        self.meta_files_helper(None, None, {'metrics_columns': []}, {})
+
+
     def test_meta_files(self):
         print('\ntest_meta_files')
         # make sure order is retained
-        cols = ['temp1', 'reward', 'temp2']
+        cols = {'metrics_columns': ['temp1', 'reward', 'temp2']}
         info = {
             'author': 'JHU APL',
             'list_test': [1, 2, 4, 3],
@@ -38,24 +43,27 @@ class TestSimpleScenarios(unittest.TestCase):
                 'nested_list': [[1, 2], [2, 3], [3, 1]]
             }
         }
+        self.meta_files_helper(cols, info, cols, info)
+        
+    def meta_files_helper(self, cols, info, expected_cols, expected_info):
+        print('\tmeta_files_helper')
         with tempfile.TemporaryDirectory() as logging_dir:
             logger = l2logger.RLPerformanceLogger(logging_dir, cols, info)
             self.assertEqual(logger.toplevel_dir, logging_dir)
             scenario = 'unit_test_meta'
             # create directory structure; should also create meta info files
             _ = self.create_and_validate_structure(logger, scenario, 1, 1, 1)
-            col_path = os.path.join(logging_dir, scenario, 'column_metric_list.json')
+            col_path = os.path.join(logging_dir, scenario, 'column_info.json')
             info_path = os.path.join(logging_dir, scenario, 'scenario_info.json')
             self.assertTrue(os.path.exists(col_path))
             self.assertTrue(os.path.exists(info_path))
             with open(col_path) as f:
                 data = json.load(f)
-                self.assertListEqual(data, cols)
+                self.assertDictEqual(data, expected_cols)
             with open(info_path) as f:
                 data = json.load(f)
-                self.assertDictEqual(data, info)
-            print('\tmeta files (column_metric_list.json and scenario_info.json) correct')
-        
+                self.assertDictEqual(data, expected_info)
+            print('\tmeta files (column_info.json and scenario_info.json) correct')
 
     def test_single_directory(self):
         print('\ntest_single_directory')
@@ -90,7 +98,8 @@ class TestSimpleScenarios(unittest.TestCase):
         for w in range(0, num_workers):
             worker = f'worker{w}'
             for b in range(0, num_blocks):
-                block =f'block{b}'
+                block_type = 'test' if b % 2 else 'train'
+                block =f'{b}-{block_type}'
                 for t in range(0, num_tasks):
                     task=f'task{t}'
                     contexts.append((worker, block, task))
@@ -103,13 +112,15 @@ class TestSimpleScenarios(unittest.TestCase):
             cur_path = os.path.join(cur_path, task_name)
             expected_dirs.add(cur_path)
 
-            record={'task_name': task_name}
-            directory_info={
-                'scenario_dirname': scenario_name,
-                'worker_dirname': worker_name,
-                'block_dirname': block_name
+            block_num, block_type = block_name.split('-')
+            block_num = int(block_num)
+            record = {
+                'worker': worker_name,
+                'task_name': task_name,
+                'block_num': block_num,
+                'block_type': block_type
             }
-            logger.write_to_blocks_log(record, directory_info, True)
+            logger.write_new_regime(record, scenario_name, True)
         scenario_dir = os.path.join(logger.toplevel_dir, scenario_name)
         dirs = TestSimpleScenarios.walk_directory_tree_relative(scenario_dir)
         expected_num = 1 + num_workers + num_workers*num_blocks + num_workers*num_blocks*num_tasks

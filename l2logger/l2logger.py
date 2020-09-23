@@ -125,14 +125,17 @@ class BlocksLog(TSVLogFile):
 
 
 class PerformanceLogger():
-    def __init__(self, toplevel_dir, column_list=[], scenario_info=None):
+    def __init__(self, toplevel_dir, column_info=None, scenario_info=None):
         self._toplevel_dir = toplevel_dir
 
-        # TODO: determine what constraints to put on column_list and scenario_info
+        # TODO: determine what constraints to put on column_info and scenario_info
         # scenario_info is object containing whatever the caller desires
-        # for now, column_list = list of names of metric_computable columns
-        assert(all(isinstance(s, str) for s in column_list))
-        self._column_list = column_list
+        # column_info is object with key for metric columns
+        col_key = 'metrics_columns'
+        # default to empty list
+        self._column_info = column_info or {col_key: []}
+        assert(col_key in self._column_info)
+        assert(all(isinstance(s, str) for s in self._column_info[col_key]))
         # coalesce if the scenario_info object is false-y
         self._scenario_info = scenario_info or {}
 
@@ -164,23 +167,22 @@ class PerformanceLogger():
                 self._toplevel_dir, os.path.sep.join(new_logging_context))
             os.makedirs(self._logging_dir, exist_ok=True)
             self._logging_context = new_logging_context
-            # TODO: is this where we should put the creation of the column_list and scenario_info json files?
-            # also, paths are hard-coded whoops
+
             scenario_dir = os.path.sep.join((self._toplevel_dir, state['scenario_dirname']))
-            column_list_path = os.path.sep.join((scenario_dir, "column_metric_list.json"))
+            column_info_path = os.path.sep.join((scenario_dir, "column_info.json"))
             scenario_info_path = os.path.sep.join((scenario_dir, "scenario_info.json"))
-            self._write_info_files(column_list_path, scenario_info_path)
+            self._write_info_files(column_info_path, scenario_info_path)
             self.data_log = self._data_logger_class(self._logging_dir)
             self.blocks_log = self._blocks_logger_class(self._logging_dir)
 
-    def _write_info_files(self, column_list_path, scenario_info_path):
+    def _write_info_files(self, column_info_path, scenario_info_path):
         # For now, open the info json files, then create the file (exist already is not ok)
-        if not os.path.exists(column_list_path):
-            with open(column_list_path, 'w+') as column_file:
-                column_file.write(json.dumps(self._column_list))
+        if not os.path.exists(column_info_path):
+            with open(column_info_path, 'w+') as column_file:
+                column_file.write(json.dumps(self._column_info, indent=2))
         if not os.path.exists(scenario_info_path):
             with open(scenario_info_path, 'w+') as scenario_file:
-                scenario_file.write(json.dumps(self._scenario_info))
+                scenario_file.write(json.dumps(self._scenario_info, indent=2))
 
     def close_logs(self):
         if self.data_log:
@@ -192,17 +194,29 @@ class PerformanceLogger():
     def get_readable_timestamp(cls):
         return datetime.now().strftime('%Y%m%dT%H%M%S.%f')
 
-    def write_to_blocks_log(self, record: dict, directory_info: dict, update_context_only=False):
+    def _get_block_dirname(self, block_num, block_type):
+        return f'{block_num}-{block_type}'
+
+    def write_new_regime(self, record: dict, scenario_dirname: str, update_context_only=False):
+        # required fields, even before the add_row call
+        assert('worker' in record)
+        assert('block_num' in record)
+        assert('block_type' in record)
+        assert('task_name' in record)
         self._check_and_update_context({
-            'scenario_dirname': directory_info['scenario_dirname'],
-            'worker_dirname': directory_info['worker_dirname'],
-            'block_dirname': directory_info['block_dirname'],
+            'scenario_dirname': scenario_dirname,
+            'worker_dirname': record['worker'],
+            'block_dirname': self._get_block_dirname(record['block_num'],
+                                                     record['block_type']),
             'task_dirname': record['task_name']
         })
         if not update_context_only:
             self.blocks_log.add_row(record)
 
     def write_to_data_log(self, record: dict):
+        # automating timestamp generation if not provided
+        if not 'timestamp' in record:
+            record['timestamp'] = PerformanceLogger.get_readable_timestamp()
         self.data_log.add_row(record)
 
 

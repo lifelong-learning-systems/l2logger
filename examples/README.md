@@ -1,5 +1,12 @@
 # Lifelong Learning Logger Examples
 
+In this folder, there are two examples for demonstrating effective usage of
+the logger. Additionally in thie folder, there are example
+`scenario_info.json` and `column_info.json` files that were produced from a
+run of `mock_simple_workflow`
+- [example_column_info.json](example_column_info.json)
+- [example_scenario_info.json](example_scenario_info.json)
+
 ## mock_simple_workflow
 
 Demonstrates a very simple mock RL workflow which would utilize the logger
@@ -17,6 +24,11 @@ library. Consists of three files:
     - An invented format for representing a learning/testing scenario; also
     contains the top level dir (*relative to current working directory*), in
     which the scenario directory will be made
+    - Note that this format is not special in any way; it is just convenient
+    for the example to show the API of the logger.
+    Clients can use whatever scheme fits their codebase best in order to
+    generate the sequences of blocks, regimes, and experiences.
+        - This is true for the parallel example below as well
 
 Ensure the l2 virtual environment is active, then run simply via:
 ```
@@ -27,6 +39,7 @@ It will create logs in whichever relative folder is specified in the
 `logging_base_dir` entry within `simple_scenario.json`.
 Repeated invocations will create their own scenario folders, with the 
 timestamp included as part of the name, as suggested.
+
 
 ## mock_parallel_workflow
 

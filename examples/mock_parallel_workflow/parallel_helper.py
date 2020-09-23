@@ -1,3 +1,7 @@
+# This is a helper file for the parallel_example.py script.
+# It consists of two helper classes, LoggerInfo and RegimeInfo
+# used to store/output relevant data to the main script.
+
 import json
 import random
 import shutil
@@ -37,7 +41,7 @@ class RegimeInfo:
 
 # This gets ***copied*** into a new process's memory space
 # Hence, don't have to worry about locking around calls to
-# write_to_data_log or write_to_blocks_log
+# write_to_data_log or write_new_regime
 class LoggerInfo:
     def __init__(self, input_file_name):
         self._seed = datetime.now()
@@ -70,16 +74,9 @@ class LoggerInfo:
     def logger(self):
         return self._logger
 
-    def get_scenario_info(self, regime_info, worker_name):
-        return {
-            'scenario_dirname': self._scenario_dirname,
-            'worker_dirname': worker_name,
-            'block_dirname': '-'.join((str(regime_info.block_num), regime_info.block_type))
-        }
-
     def write_regime(self, regime_info, worker_index):
         worker_name = f'worker-{worker_index}'
-        regime_record = {
+        record = {
             'block_num': regime_info.block_num,
             'regime_num': regime_info.regime_num,
             'block_type': regime_info.block_type,
@@ -87,17 +84,14 @@ class LoggerInfo:
             'task_name': regime_info.task_name,
             'params': regime_info.params
         }
-        scenario_info = self.get_scenario_info(regime_info, worker_name)
-        self.logger.write_to_blocks_log(regime_record, scenario_info)
+        self.logger.write_new_regime(record, self._scenario_dirname)
 
     def write_data(self, regime_info, exp_num, reward=1, status='Done'):
-        timestamp = l2logger.PerformanceLogger.get_readable_timestamp()
         data_record = {
             'block_num': regime_info.block_num,
             'regime_num': regime_info.regime_num,
             'exp_num': exp_num,
             'status': status,
-            'timestamp': timestamp,
             'reward': reward,
             'rand-seed': self._seed
         }
@@ -111,8 +105,8 @@ class LoggerInfo:
             print(f'Using existing logging directory: {logs_base}')
         # log root in current directory
         syllabus_info = {
-            'author': 'Ben Stoler',
+            'author': 'JHU APL',
             'script': __file__
         }
-        cols = ['reward']
+        cols = {'metrics_columns': ['reward']}
         return l2logger.RLPerformanceLogger(logs_base, cols, syllabus_info)

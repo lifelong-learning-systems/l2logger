@@ -11,17 +11,14 @@ SCENARIO_DIR = f'simple-{time_str}'
 SCENARIO_INFO = {
     'author': 'JHU APL'
 }
-METRIC_COLUMNS = ['reward']
+COLUMN_INFO = {
+    'metrics_columns': ['reward']
+}
 
-def log_block(performance_logger, exp):
+def log_regime(performance_logger, exp):
     seq = exp.sequence_nums
     block_type = exp.block_type
     worker = f'{os.path.basename(__file__)}-0'
-    directory_info = {
-        'scenario_dirname': SCENARIO_DIR,
-        'worker_dirname': worker,
-        'block_dirname': f'{seq.block_num}-{block_type}'
-    }
     record = {
         'block_num': seq.block_num,
         'regime_num': seq.regime_num,
@@ -30,7 +27,7 @@ def log_block(performance_logger, exp):
         'task_name': exp.task_name,
         'params': exp.param_string
     }
-    performance_logger.write_to_blocks_log(record, directory_info)
+    performance_logger.write_new_regime(record, SCENARIO_DIR)
 
 def log_data(performance_logger, exp, results, status='Done'):
     seq = exp.sequence_nums
@@ -38,8 +35,7 @@ def log_data(performance_logger, exp, results, status='Done'):
         'block_num': seq.block_num,
         'regime_num': seq.regime_num,
         'exp_num': seq.exp_num,
-        'status': status,
-        'timestamp': l2logger.PerformanceLogger.get_readable_timestamp()
+        'status': status
     }
     record.update(results)
     performance_logger.write_to_data_log(record)
@@ -56,7 +52,7 @@ def run_scenario(agent, performance_logger):
         # check for new regime
         if last_seq.regime_num != cur_seq.regime_num:
             print("new regime:", cur_seq.regime_num)
-            log_block(performance_logger, exp)
+            log_regime(performance_logger, exp)
 
         print("consuming experience:", cur_seq.exp_num)
         results = exp.run()
@@ -68,6 +64,7 @@ if __name__ == "__main__":
     with open('simple_scenario.json') as f:
         data = json.load(f)
     agent = MockAgent(data['scenario']) 
+    SCENARIO_INFO['input_file'] = data
     performance_logger = l2logger.RLPerformanceLogger(
-        data['logging_base_dir'], METRIC_COLUMNS, SCENARIO_INFO)
+        data['logging_base_dir'], COLUMN_INFO, SCENARIO_INFO)
     run_scenario(agent, performance_logger)

@@ -14,12 +14,12 @@ python test_simple_logging.py
       meta files are created and populated correctly in the scenario
       directory
 - test_single_directory
-    - performs a single `write_to_blocks_log`, to test that the 
+    - performs a single `write_new_regime`, to test that the 
       directory structure is created appropriately
 - test_stress_directory
-    - performs many invocations of `write_to_blocks_log`, to test that the 
+    - performs many invocations of `write_new_regime`, to test that the 
       directory structure is created appropriately
 - test_one_block
-    - tests a single `write_to_blocks_log` and several `write_to_data_log`,
+    - tests a single `write_new_regime` and several `write_to_data_log`,
     ensuring the `data-log.tsv` and `block-report.tsv` files are created
     - TODO: ensure the log files have the correct content as well

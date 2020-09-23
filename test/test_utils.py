@@ -25,14 +25,9 @@ class FakeExp:
         self._exp_num = exp_num
         self._extra_cols = extra_cols
     
-    def get_blocks_record(self, scenario, worker_num):
+    def get_regime_record(self, worker_num):
         worker = f'worker{worker_num}'
-        directory_info = {
-            'scenario_dirname': scenario,
-            'worker_dirname': worker,
-            'block_dirname': self._regime._block_name
-        }
-        block_record = {
+        record = {
             'block_num': self._regime._block_num,
             'regime_num': self._regime._regime_num,
             'block_type': self._regime._block_type,
@@ -40,15 +35,14 @@ class FakeExp:
             'task_name': self._regime._task_name,
             'params': self._regime._params
         }
-        return block_record, directory_info
+        return record
     
     def get_data_record(self, worker_num):
         record = {
             'block_num': self._regime._block_num,
             'regime_num': self._regime._regime_num,
             'exp_num': self._exp_num,
-            'status': 'Done',
-            'timestamp': self._exp_num * 1000,
+            'status': 'Done'
         }
         record.update(self._extra_cols)
         return record
@@ -99,9 +93,9 @@ class FakeApplication:
             logger = loggers[worker_num]
             if exp._regime._regime_num != last_regimes[logger]:
                 last_regimes[logger] = exp._regime._regime_num
-                # write to blocks log
-                blk_record, dir_info = exp.get_blocks_record(self._scenario_name, worker_num)
-                logger.write_to_blocks_log(blk_record, dir_info)
+                # write new regime
+                regime_record = exp.get_regime_record(worker_num)
+                logger.write_new_regime(regime_record, self._scenario_name)
             data_record = exp.get_data_record(worker_num)
             logger.write_to_data_log(data_record)
         for logger in loggers:
