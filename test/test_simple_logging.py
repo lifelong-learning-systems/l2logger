@@ -14,22 +14,59 @@ from test_utils import FakeApplication
 #@unittest.skipUnless(importlib.util.find_spec('pandas'), 'Requires pandas library')
 class TestSimpleScenarios(unittest.TestCase):
 
+    # TODO: reduce code re-use here
     def test_one_block(self):
         print('\ntest_one_block')
-        # TODO: reduce code re-use here
         with tempfile.TemporaryDirectory() as logging_dir:
             logger = l2logger.RLPerformanceLogger(logging_dir)
-            extra_cols = {'reward': 1.5, 'rand_seed': 'September 2020'}
+            extra_cols = {
+                'reward': 1.5,
+                'rand_seed': 'September 2020'
+            }
             app = FakeApplication(logger, train_test_cycles=1,
                                   tasks=1, regimes_per_task=1,
                                   exp_per_regime=100, extra_cols=extra_cols)
             app.consume_experiences()
-            # TODO: validate logger output
+            app.validate_logs(self, logging_dir)
+    
+    def test_many_blocks(self):
+        print('\ntest_many_blocks')
+        with tempfile.TemporaryDirectory() as logging_dir:
+            logger = l2logger.RLPerformanceLogger(logging_dir)
+            extra_cols = {'reward': 1, 'seed': 314159, 'author': 'JHU APL'}
+            app = FakeApplication(logger, train_test_cycles=5, tasks=4,
+                                   regimes_per_task=2, exp_per_regime=100,
+                                   extra_cols=extra_cols)
+            app.consume_experiences()
+            app.validate_logs(self, logging_dir)
+    
+    def test_stress_blocks(self):
+        print('\ntest_stress_blocks')
+        with tempfile.TemporaryDirectory() as logging_dir:
+            logger = l2logger.RLPerformanceLogger(logging_dir)
+            extra_cols = {'test_name': 'stress', 'reward': 42}
+            app = FakeApplication(logger, train_test_cycles=100, tasks=10,
+                                   regimes_per_task=10, exp_per_regime=5,
+                                   extra_cols=extra_cols)
+            app.consume_experiences()
+            app.validate_logs(self, logging_dir)
+
+    def test_stress_data(self):
+        print('\ntest_stress_data')
+        with tempfile.TemporaryDirectory() as logging_dir:
+            logger = l2logger.RLPerformanceLogger(logging_dir)
+            extra_cols = {'test_name': 'stress', 'reward': 42}
+            app = FakeApplication(logger, train_test_cycles=4, tasks=5,
+                                   regimes_per_task=5, exp_per_regime=500,
+                                   workers=100, extra_cols=extra_cols)
+            app.consume_experiences()
+            app.validate_logs(self, logging_dir)
+    
+
 
     def test_meta_files_default(self):
         print('\ntest_meta_files_default')
         self.meta_files_helper(None, None, {'metrics_columns': []}, {})
-
 
     def test_meta_files(self):
         print('\ntest_meta_files')
