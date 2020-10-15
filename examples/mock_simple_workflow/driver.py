@@ -12,7 +12,7 @@ SCENARIO_INFO = {
     'author': 'JHU APL'
 }
 COLUMN_INFO = {
-    'metrics_columns': ['reward']
+    'metrics_columns': ['reward', 'debug_info']
 }
 
 def log_regime(performance_logger, exp):
@@ -29,14 +29,16 @@ def log_regime(performance_logger, exp):
     }
     performance_logger.write_new_regime(record, SCENARIO_DIR)
 
-def log_data(performance_logger, exp, results, status='Done'):
+def log_data(performance_logger, exp, results, status='complete'):
     seq = exp.sequence_nums
     record = {
         'block_num': seq.block_num,
         'regime_num': seq.regime_num,
         'exp_num': seq.exp_num,
+        #'exp_status': status
         'status': status
     }
+
     record.update(results)
     performance_logger.write_to_data_log(record)
 
@@ -54,7 +56,7 @@ def run_scenario(agent, performance_logger):
             print("new regime:", cur_seq.regime_num)
             log_regime(performance_logger, exp)
 
-        print("consuming experience:", cur_seq.exp_num)
+        #print("consuming experience:", cur_seq.exp_num)
         results = exp.run()
         log_data(performance_logger, exp, results)
 
