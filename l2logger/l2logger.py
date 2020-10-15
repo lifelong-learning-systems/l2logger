@@ -94,6 +94,8 @@ class DataLogger():
         self._all_fields_ordered = None
         self._last_exp_num = None
         self._last_block_num = None
+        self._default_exp_status = 'complete'
+        self._default_worker_id = 'worker-default'
         self._block_types = ['train', 'test']
         self._exp_statuses = ['complete', 'incomplete']
         self._worker_pattern = re.compile(r'[0-9a-zA-Z_\-.]+')
@@ -147,6 +149,10 @@ class DataLogger():
             raise RuntimeError('timestamp column cannot be overwritten')
         else:
             new_record['timestamp'] = datetime.now().strftime('%Y%m%dT%H%M%S.%f')
+        if not 'exp_status' in new_record:
+            new_record['exp_status'] = self._default_exp_status
+        if not 'worker_id' in new_record:
+            new_record['worker_id'] = self._default_worker_id
         return new_record
 
     def _update_state(self, record):
