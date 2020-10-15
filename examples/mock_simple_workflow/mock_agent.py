@@ -32,8 +32,8 @@ class Experience:
     def sequence_nums(self):
         return self._seq_nums
     @property
-    def param_string(self):
-        return json.dumps([])
+    def params(self):
+        return {'param1': 'str1', 'param2': 2}
     
     def run(self):
         # do ML stuff here, maybe launch gym environment with task_name

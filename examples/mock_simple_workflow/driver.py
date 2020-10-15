@@ -6,8 +6,7 @@ from l2logger import l2logger
 
 from mock_agent import MockAgent, SequenceNums
 
-time_str = str(time.time()).replace('.', '-')
-SCENARIO_DIR = f'simple-{time_str}'
+SCENARIO_DIR='simple'
 SCENARIO_INFO = {
     'author': 'JHU APL'
 }
@@ -15,32 +14,22 @@ COLUMN_INFO = {
     'metrics_columns': ['reward', 'debug_info']
 }
 
-def log_regime(performance_logger, exp):
-    seq = exp.sequence_nums
-    block_type = exp.block_type
-    worker = f'{os.path.basename(__file__)}-0'
-    record = {
-        'block_num': seq.block_num,
-        'regime_num': seq.regime_num,
-        'block_type': block_type,
-        'worker': worker,
-        'task_name': exp.task_name,
-        'params': exp.param_string
-    }
-    performance_logger.write_new_regime(record, SCENARIO_DIR)
-
 def log_data(performance_logger, exp, results, status='complete'):
     seq = exp.sequence_nums
+    worker = f'{os.path.basename(__file__)}_0'
     record = {
         'block_num': seq.block_num,
-        'regime_num': seq.regime_num,
+        'block_type': exp.block_type,
+        'task_params': exp.params,
+        'task_name': exp.task_name,
         'exp_num': seq.exp_num,
-        #'exp_status': status
-        'status': status
+        'exp_status': status,
+        'worker_id': worker,
+        'regime_num': seq.regime_num,
     }
 
     record.update(results)
-    performance_logger.write_to_data_log(record)
+    performance_logger.log_record(record)
 
 
 def run_scenario(agent, performance_logger):
@@ -54,9 +43,7 @@ def run_scenario(agent, performance_logger):
         # check for new regime
         if last_seq.regime_num != cur_seq.regime_num:
             print("new regime:", cur_seq.regime_num)
-            log_regime(performance_logger, exp)
 
-        #print("consuming experience:", cur_seq.exp_num)
         results = exp.run()
         log_data(performance_logger, exp, results)
 
@@ -67,6 +54,6 @@ if __name__ == "__main__":
         data = json.load(f)
     agent = MockAgent(data['scenario']) 
     SCENARIO_INFO['input_file'] = data
-    performance_logger = l2logger.RLPerformanceLogger(
-        data['logging_base_dir'], COLUMN_INFO, SCENARIO_INFO)
+    performance_logger = l2logger.DataLogger(
+        data['logging_base_dir'], SCENARIO_DIR, COLUMN_INFO, SCENARIO_INFO)
     run_scenario(agent, performance_logger)
