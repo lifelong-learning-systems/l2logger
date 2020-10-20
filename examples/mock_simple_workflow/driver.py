@@ -11,7 +11,7 @@ SCENARIO_INFO = {
     'author': 'JHU APL'
 }
 COLUMN_INFO = {
-    'metrics_columns': ['reward', 'debug_info']
+    'metrics_columns': ['reward']
 }
 
 def log_data(performance_logger, exp, results, status='complete'):
@@ -24,8 +24,7 @@ def log_data(performance_logger, exp, results, status='complete'):
         'task_name': exp.task_name,
         'exp_num': seq.exp_num,
         'exp_status': status,
-        'worker_id': worker,
-        'regime_num': seq.regime_num,
+        'worker_id': worker
     }
 
     record.update(results)
@@ -33,17 +32,13 @@ def log_data(performance_logger, exp, results, status='complete'):
 
 
 def run_scenario(agent, performance_logger):
-    last_seq = SequenceNums(-1, -1, -1)
+    last_seq = SequenceNums(-1, -1)
     while not agent.complete():
         exp = agent.next_experience()
         cur_seq = exp.sequence_nums
         # check for new block
         if last_seq.block_num != cur_seq.block_num:
             print("new block:", cur_seq.block_num)
-        # check for new regime
-        if last_seq.regime_num != cur_seq.regime_num:
-            print("new regime:", cur_seq.regime_num)
-
         results = exp.run()
         log_data(performance_logger, exp, results)
 

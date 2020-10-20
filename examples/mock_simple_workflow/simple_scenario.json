@@ -1,5 +1,8 @@
 {
     "logging_base_dir": "logs_simple",
+    "scenario2": [
+        {"task": "A", "params": {"size": 5}, "count": 100, "type": "train"}
+    ],
     "scenario": [
         {"type": "train", "regimes":
             [{"task": "A", "count": 100}]

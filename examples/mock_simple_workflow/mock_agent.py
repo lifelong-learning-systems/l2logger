@@ -3,14 +3,11 @@ from collections import deque
 from l2logger import l2logger
 
 class SequenceNums:
-    def __init__(self, block, regime, exp):
-        self._block, self._regime, self._exp = block, regime, exp
+    def __init__(self, block, exp):
+        self._block, self._exp = block, exp
     @property
     def block_num(self):
         return self._block
-    @property
-    def regime_num(self):
-        return self._regime
     @property
     def exp_num(self):
         return self._exp
@@ -58,14 +55,13 @@ class MockAgent:
     # add all experiences to a deque for processing
     def _init_queue(self):
         self._exp_queue = deque()
-        regime_num, exp_num = -1, -1
+        exp_num = -1
         for block_num, block in enumerate(self._scenario):
             block_type = block['type']
             for regime in block['regimes']:
-                regime_num += 1
                 for _ in range(0, regime['count']):
                     exp_num += 1
                     task_name = regime['task']
-                    seq = SequenceNums(block_num, regime_num, exp_num)
+                    seq = SequenceNums(block_num, exp_num)
                     exp = Experience(self, task_name, seq, block_type)
                     self._exp_queue.append(exp)

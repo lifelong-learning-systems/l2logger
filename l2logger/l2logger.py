@@ -53,6 +53,9 @@ class TSVLogFile():
         if write_header:
             self._tsv_log.writeheader()
         self._initialized = True
+    
+    def __del__(self, *args):
+        self.close()
 
     # validation handled in caller
     def add_row(self, record):
@@ -60,8 +63,6 @@ class TSVLogFile():
             self._initialize()
         self._tsv_log.writerow(record)
         self._tsv_log_file.flush()
-        # TODO: should it close upon each write?
-        self.close()
 
     def close(self):
         if self._tsv_log_file and not self._tsv_log_file.closed:
@@ -129,6 +130,10 @@ class DataLogger():
 
         record['task_params'] = json.dumps(record['task_params'])
         self._tsv_logger.add_row(record)
+    
+    def close(self):
+        if self._tsv_logger:
+            self._tsv_logger.close()
 
     # ensure all record fields are valid
     def _validate_record(self, record):

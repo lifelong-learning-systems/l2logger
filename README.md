@@ -14,8 +14,8 @@ Detailed explanations of the logging output structure/format can be seen via
 
 ## Interface/Usage
 At a high level, the library is used simply by creating an
-instance of the logger object, then by invoking the `write_new_regime`
-and `write_data_to_log` member functions on it when desired.
+instance of the logger object, then by invoking the `log_record`
+ member function on it at least once per experience.
 
 For a detailed explanation of the provided functions, see
 [docs/interface.md](./docs/interface.md)
