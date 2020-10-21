@@ -20,9 +20,10 @@ import glob
 import json
 import logging
 import os
-import sys
 import platform
+import sys
 
+import numpy as np
 import pandas as pd
 
 
@@ -98,6 +99,29 @@ def read_log_data(input_dir, analysis_variables=None):
 
     logs = logs.sort_values('exp_num', ignore_index=True)
     return logs
+
+
+def fill_regime_num(df):
+    # Initialize regime number column
+    df['regime_num'] = np.full_like(df['block_num'], 0, dtype=np.int)
+    
+    # Initialize variables
+    regime_num = -1
+    prev_block_type = ''
+    prev_task_name = ''
+    prev_task_params = ''
+
+    # Determine regime changes by looking at block type, task name, and parameter combinations
+    for index, row in df.iterrows():
+        if row['block_type'] != prev_block_type or row['task_name'] != prev_task_name or row['task_params'] != prev_task_params:
+            regime_num = regime_num + 1
+            prev_block_type = row['block_type']
+            prev_task_name = row['task_name']
+            prev_task_params = row['task_params']
+
+        df.at[index, 'regime_num'] = regime_num
+
+    return df
 
 
 def parse_blocks(data):
