@@ -86,8 +86,10 @@ def read_log_data(input_dir, analysis_variables=None):
         for file in files:
             if file == 'data-log.tsv':
                 if analysis_variables is not None:
+                    default_cols = [
+                        'block_num', 'exp_num', 'block_type', 'task_name', 'task_params', 'exp_status']
                     df = pd.read_csv(os.path.join(root, file), sep='\t')[
-                        ['timestamp', 'block_num', 'regime_num', 'exp_num'] + analysis_variables]
+                        default_cols + analysis_variables]
                 else:
                     df = pd.read_csv(os.path.join(root, file), sep='\t')
                 if logs is None:
