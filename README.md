@@ -5,12 +5,12 @@ producing logs in a convenient format for the provided l2metrics module,
 but can also be used independently.
 
 ## Logger Term Definitions/Glossary
-Highly recommend starting here, detailed explanation of the terms used 
+Strongly recommend starting here, detailed explanation of the terms used 
 throughout: [docs/definitions.md](./docs/definitions.md)
 
-## Logger Output/Structure 
+## Logger Output Format
 Detailed explanations of the logging output structure/format can be seen via
-[docs/logger_output.md](./docs/logger_output.md).
+[docs/log_format.md](./docs/log_format.md).
 
 ## Interface/Usage
 At a high level, the library is used simply by creating an

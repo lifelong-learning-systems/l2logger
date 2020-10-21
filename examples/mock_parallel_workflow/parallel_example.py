@@ -23,11 +23,10 @@ class Task:
               f'(worker-{worker_index})'
         print(f'{name} starting...')
         time.sleep(0.01)
-        self._logger_info.write_data(self._regime_info, exp_num)
+        self._logger_info.write_data(self._regime_info, exp_num, f'worker-{worker_index}')
         print(f'{name} Done!')
 
 def regime_worker(logger_info, regime_info, exp_num_queue, worker_index):
-    logger_info.write_regime(regime_info, worker_index)
     while True:
         try:
             exp_num = exp_num_queue.get(block=True, timeout=0.1)

@@ -8,30 +8,24 @@ cd test
 python test_simple_logging.py
 ```
 
-## Test Summaries
-- test_meta_files
-    - ensures that the `colummn_metric_list.json` and `scenario_info.json`
-      meta files are created and populated correctly in the scenario
-      directory
-- test_meta_files_default
-    - ensures that the `colummn_metric_list.json` and `scenario_info.json`
-      meta files are created and populated correctly in the scenario
-      directory when using the default parameters
-- test_single_directory
-    - performs a single `write_new_regime`, to test that the 
-      directory structure is created appropriately
-- test_stress_directory
-    - performs many invocations of `write_new_regime`, to test that the 
-      directory structure is created appropriately
-- test_one_block
-    - tests a single `write_new_regime` and several `write_to_data_log`,
-    ensuring the `data-log.tsv` and `block-info.tsv` files are created, with
-    the correct content
-- test_many_blocks
-    - same as `test_one_block`, but 80 regimes and 100 experiences per regime
-- test_stress_blocks
-    - same as `test_one_block`, but 20,000 regimes and 5 experiences per
-    regime
-- test_stress_data
-    - same as `test_one_block`, but 200 regimes and 500 experiences per
-    regime; distributed among 100 "workers" (copies of logger object)
+## Test summaries
+- `testErrorInit`
+    - tests a variety of erroneous calls to the constructor of DataLogger,
+    including:
+        - `logger_info` not being a dict
+        - `metrics_columns` field not mapping to a list of non-empty strings
+        - `metrics_columns` missing as a field
+-  `testValidRecord`
+    - ensures valid sequences of calls to `log_record` do not throw errors,
+    including:
+        - logging the same record twice in a row
+        - increasing `exp_num`
+        - increasing `block_num`
+- `testErrorRecord`
+    - ensures erroneous sequences of calls to `log_record` do throw errors:
+        - missing various expected fields
+        - trying to override `timestamp`
+        - adding extra columns in a later call
+        - invalid sequences of `block_num` and `exp_num`
+        - invalid `worker_id`
+        - `task_params` not being JSON serializable

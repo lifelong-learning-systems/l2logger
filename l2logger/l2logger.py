@@ -24,11 +24,6 @@ import time
 import json
 from datetime import datetime
 
-def get_log_foldername(path, format_str="{scenario}-{timestamp}"):
-    scenario_name = os.path.basename(os.path.basename(path)).split('.')[0]
-    # int(round(time.time() * 1000))
-    timestamp = re.sub('[.]', '-', str(time.time()))
-    return format_str.format(scenario=scenario_name, timestamp=timestamp)
 
 
 class TSVLogFile():
@@ -70,21 +65,28 @@ class TSVLogFile():
             self._initialized = False
 
 class DataLogger():
-    def __init__(self, toplevel_dir, scenario_name, column_info=None, scenario_info=None):
+
+    _LOG_FORMAT_VERSION = '1.0'
+
+    def __init__(self, logging_base_dir, scenario_name, logger_info, scenario_info=None):
         self._standard_fields = [
             'block_num', 'exp_num', 'worker_id', 'block_type', 'task_name', 
             'task_params', 'exp_status', 'timestamp'
         ]
-        self._toplevel_dir = toplevel_dir
-        # should be toplevel/scenario-TIMESTAMP
-        self._scenario_dir = os.path.join(self._toplevel_dir, get_log_foldername(scenario_name))
+        self._logging_base_dir = logging_base_dir
+        # should be logging_base_dir/scenario-TIMESTAMP
+        self._scenario_dir = os.path.join(self._logging_base_dir, self._get_log_foldername(scenario_name))
         col_key = 'metrics_columns'
-        self._column_info = column_info or {col_key: []}
-        if not col_key in self._column_info:
-            raise RuntimeError(f'column_info missing required key \'{col_key}\'')
-        self._metric_fields = self._column_info[col_key]
+        version_key = 'log_format_version'
+        self._logger_info = logger_info
+        if not type(self._logger_info) is dict or not col_key in self._logger_info:
+            raise RuntimeError(f'logger_info missing required key \'{col_key}\'')
+        self._metric_fields = self._logger_info[col_key]
         if not type(self._metric_fields) is list or any(type(s) is not str for s in self._metric_fields):
-            raise RuntimeError(f'column_info[\'{col_key}\'] must be a list of strings')
+            raise RuntimeError(f'logger_info[\'{col_key}\'] must be a list of strings')
+        if not len(self._metric_fields):
+            raise RuntimeError(f'logger_info[\'{col_key}\'] cannot be empty')
+        self._logger_info[version_key] = DataLogger._LOG_FORMAT_VERSION
 
         self._scenario_info = scenario_info or {}
         self.write_info_files()
@@ -101,13 +103,18 @@ class DataLogger():
         self._exp_statuses = ['complete', 'incomplete']
         self._worker_pattern = re.compile(r'[0-9a-zA-Z_\-.]+')
 
+
+    @property
+    def logging_base_dir(self):
+        return self._logging_base_dir
+
     @property
     def scenario_dir(self):
         return self._scenario_dir
     
     @property
-    def column_info(self):
-        return self._column_info
+    def logger_info(self):
+        return self._logger_info
     
     @property
     def scenario_info(self):
@@ -115,10 +122,10 @@ class DataLogger():
 
     def write_info_files(self):
         os.makedirs(self._scenario_dir, exist_ok=True)
-        column_info_path = os.path.join(self._scenario_dir, 'column_info.json')
+        logger_info_path = os.path.join(self._scenario_dir, 'logger_info.json')
         scenario_info_path = os.path.join(self._scenario_dir, 'scenario_info.json')
-        with open(column_info_path, 'w+') as column_file:
-            column_file.write(json.dumps(self._column_info, indent=2))
+        with open(logger_info_path, 'w+') as column_file:
+            column_file.write(json.dumps(self._logger_info, indent=2))
         with open(scenario_info_path, 'w+') as scenario_file:
             scenario_file.write(json.dumps(self._scenario_info, indent=2))
 
@@ -167,7 +174,9 @@ class DataLogger():
         self._last_exp_num = record['exp_num']
 
         old_logging_dir = self._logging_dir
-        self._logging_dir = os.path.join(self._scenario_dir, record['worker_id'], str(record['block_num']))
+        self._logging_dir = os.path.join(
+            self._scenario_dir, record['worker_id'], 
+            f'{str(record["block_num"])}-{record["block_type"]}')
         if old_logging_dir != self._logging_dir:
             os.makedirs(self._logging_dir, exist_ok=True)
             if self._tsv_logger:
@@ -230,3 +239,9 @@ class DataLogger():
             json.dumps(task_params)
         except:
             raise RuntimeError('task_params must be valid json')
+
+    def _get_log_foldername(self, path, format_str="{scenario}-{timestamp}"):
+        scenario_name = os.path.basename(os.path.basename(path)).split('.')[0]
+        # int(round(time.time() * 1000))
+        timestamp = re.sub('[.]', '-', str(time.time()))
+        return format_str.format(scenario=scenario_name, timestamp=timestamp)
