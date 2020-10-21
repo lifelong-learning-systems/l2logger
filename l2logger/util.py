@@ -20,6 +20,7 @@ import glob
 import json
 import logging
 import os
+import sys
 import platform
 
 import pandas as pd
@@ -78,7 +79,6 @@ def read_log_data(input_dir, analysis_variables=None):
     # This function scrapes the TSV files containing syllabus metadata and system performance log data and returns a
     # pandas dataframe with the merged data
     logs = None
-    blocks = None
 
     fully_qualified_dir = get_fully_qualified_name(input_dir)
 
@@ -94,14 +94,9 @@ def read_log_data(input_dir, analysis_variables=None):
                     logs = df
                 else:
                     logs = pd.concat([logs, df])
-            if file == 'block-info.tsv':
-                df = pd.read_csv(os.path.join(root, file), sep='\t')
-                if blocks is None:
-                    blocks = df
-                else:
-                    blocks = pd.concat([blocks, df])
 
-    return logs.merge(blocks, on=['block_num', 'regime_num'])
+    logs = logs.sort_values('exp_num', ignore_index=True)
+    return logs
 
 
 # TODO: update to new API
@@ -123,7 +118,7 @@ def parse_blocks(data):
         # Now must account for the multiple tasks, parameters
         d1 = data[(data["block_num"] == block_num) & (data["block_type"] == block_type)]
         regimes_within_blocks = d1.loc[:, 'regime_num'].unique()
-        param_set = d1.loc[:, 'params'].unique()
+        param_set = d1.loc[:, 'task_params'].unique()
 
         # Save the regime_num numbers involved in testing for subsequent metrics
         if block_type == 'test':
@@ -131,19 +126,19 @@ def parse_blocks(data):
 
         for regime_num in regimes_within_blocks:
             all_regime_nums.append(regime_num)
-            d2 = d1[d1["regime_num"] == regime_num]
+            d2 = d1[d1['regime_num'] == regime_num]
             task_name = d2.loc[:, 'task_name'].unique()[0]
 
             block_info = {'block_num': block_num, 'block_type': block_type, 'task_name': task_name,
-                           'regime_num': regime_num}
+                          'regime_num': regime_num}
 
             if len(param_set) > 1:
                 # There is parameter variation exercised in the syllabus and we need to record it
-                task_specific_param_set = d2.loc[:, 'params'].unique()[0]
-                block_info['param_set'] = task_specific_param_set
+                task_specific_param_set = d2.loc[:, 'task_params'].unique()[0]
+                block_info['task_params'] = task_specific_param_set
             elif len(param_set) == 1:
                 # Every task in this block has the same parameter set
-                block_info['param_set'] = param_set[0]
+                block_info['task_params'] = param_set[0]
             else:
                 raise Exception(f"Error parsing the parameter set for this task: {param_set}")
 
