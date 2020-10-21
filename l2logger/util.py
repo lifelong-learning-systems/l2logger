@@ -21,6 +21,7 @@ import json
 import logging
 import os
 import platform
+import re
 import sys
 
 import numpy as np
@@ -101,9 +102,9 @@ def read_log_data(input_dir, analysis_variables=None):
     return logs
 
 
-def fill_regime_num(df):
+def fill_regime_num(data):
     # Initialize regime number column
-    df['regime_num'] = np.full_like(df['block_num'], 0, dtype=np.int)
+    data['regime_num'] = np.full_like(data['block_num'], 0, dtype=np.int)
     
     # Initialize variables
     regime_num = -1
@@ -112,16 +113,16 @@ def fill_regime_num(df):
     prev_task_params = ''
 
     # Determine regime changes by looking at block type, task name, and parameter combinations
-    for index, row in df.iterrows():
+    for index, row in data.iterrows():
         if row['block_type'] != prev_block_type or row['task_name'] != prev_task_name or row['task_params'] != prev_task_params:
             regime_num = regime_num + 1
             prev_block_type = row['block_type']
             prev_task_name = row['task_name']
             prev_task_params = row['task_params']
 
-        df.at[index, 'regime_num'] = regime_num
+        data.at[index, 'regime_num'] = regime_num
 
-    return df
+    return data
 
 
 def parse_blocks(data):
@@ -186,3 +187,44 @@ def read_logger_info(input_dir):
     with open(fully_qualified_dir + '/logger_info.json') as json_file:
         logger_info = json.load(json_file)
         return logger_info['metrics_columns']
+
+
+def validate_log(data):
+    # Initialize values
+    last_block_num = None
+    last_exp_num = None
+    block_types = ['train', 'test']
+    exp_statuses = ['complete', 'incomplete']
+    worker_pattern = re.compile(r'[0-9a-zA-Z_\-.]+')
+
+    # Iterate over all rows of log data
+    for index, row in data.iterrows():
+        # Validate block number
+        if (not type(row['block_num']) is int) or row['block_num'] < 0:
+            raise RuntimeError(f'block_num must be non-negative integer')
+        elif (not last_block_num is None) and row['block_num'] < last_block_num:
+            raise RuntimeError('block_num must be non-decreasing')
+        last_block_num = row['block_num']
+
+        # Validate exp number
+        if (not type(row['exp_num']) is int) or row['exp_num'] < 0:
+            raise RuntimeError(f'exp_num must be non-negative integer')
+        elif (not last_exp_num is None) and row['exp_num'] < last_exp_num:
+            raise RuntimeError('exp_num must be non-decreasing')
+        last_exp_num = row['exp_num']
+
+        # Validate block type
+        if not row['block_type'] in block_types:
+            raise RuntimeError(f'block_type must be one of {block_types}')
+    
+        # Validate exp status
+        if not row['exp_status'] in exp_statuses:
+            raise RuntimeError(f'exp_status must be one of {exp_statuses}')
+    
+        if re.fullmatch(worker_pattern, str(row['worker_id'])) is None:
+            raise RuntimeError(f'worker_id can only contain alphanumeric characters, hyphens, dashes, or periods')
+
+        try:
+            json.dumps(row['task_params'])
+        except:
+            raise RuntimeError('task_params must be valid json')
