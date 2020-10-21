@@ -38,10 +38,13 @@ from l2logger import l2logger
 ...
 dir = 'l2_logs'
 name = 'test_scenario'
-cols = ['reward']
+cols = {'metrics_columns': ['reward']}
 meta = {'author': 'JHU APL', 'scenario_version': '0.1'}
-perf_logger = l2logger.DataLogger(dir, name, cols, meta)
+logger = l2logger.DataLogger(dir, name, cols, meta)
 ```
+Something to note here is that the `logger_info` and `scenario_info` files
+get written to disk in this __init__ function, rather than on the first
+`log_record` call.
 
 ## Writing Data
 
@@ -108,7 +111,7 @@ logger.close()
 
 ## Utils
 
-The performance logger provides several utility functions which may be useful
+The logger provides several utility functions which may be useful
 to the developer. These include:
 
 - `DataLogger.get_readable_timestamp(cls)`

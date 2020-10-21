@@ -14,7 +14,7 @@ COLUMN_INFO = {
     'metrics_columns': ['reward']
 }
 
-def log_data(performance_logger, exp, results, status='complete'):
+def log_data(data_logger, exp, results, status='complete'):
     seq = exp.sequence_nums
     worker = f'{os.path.basename(__file__)}_0'
     record = {
@@ -28,10 +28,10 @@ def log_data(performance_logger, exp, results, status='complete'):
     }
 
     record.update(results)
-    performance_logger.log_record(record)
+    data_logger.log_record(record)
 
 
-def run_scenario(agent, performance_logger):
+def run_scenario(agent, data_logger):
     last_seq = SequenceNums(-1, -1)
     while not agent.complete():
         exp = agent.next_experience()
@@ -40,7 +40,7 @@ def run_scenario(agent, performance_logger):
         if last_seq.block_num != cur_seq.block_num:
             print("new block:", cur_seq.block_num)
         results = exp.run()
-        log_data(performance_logger, exp, results)
+        log_data(data_logger, exp, results)
 
         last_seq = cur_seq
 
@@ -49,6 +49,6 @@ if __name__ == "__main__":
         data = json.load(f)
     agent = MockAgent(data['scenario']) 
     SCENARIO_INFO['input_file'] = data
-    performance_logger = l2logger.DataLogger(
+    data_logger = l2logger.DataLogger(
         data['logging_base_dir'], SCENARIO_DIR, COLUMN_INFO, SCENARIO_INFO)
-    run_scenario(agent, performance_logger)
+    run_scenario(agent, data_logger)
