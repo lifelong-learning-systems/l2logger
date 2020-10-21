@@ -74,7 +74,6 @@ def get_fully_qualified_name(log_dir):
             raise NotADirectoryError
 
 
-# TODO: update to new API
 def read_log_data(input_dir, analysis_variables=None):
     # This function scrapes the TSV files containing syllabus metadata and system performance log data and returns a
     # pandas dataframe with the merged data
@@ -101,7 +100,6 @@ def read_log_data(input_dir, analysis_variables=None):
     return logs
 
 
-# TODO: update to new API
 def parse_blocks(data):
     # Want to get the unique blocks, split out training/testing info, and return the split info
     block_list = []
@@ -156,7 +154,6 @@ def parse_blocks(data):
     return test_task_nums, blocks_df
 
 
-# TODO: update to new API
 def read_logger_info(input_dir):
     # This function reads the column info JSON file in the input directory returns the contents
 
