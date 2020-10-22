@@ -6,7 +6,7 @@ HERE = pathlib.Path(__file__).parent
 
 setup(
     name='l2logger',
-    version='0.1.0',
+    version='1.0.0',
     description='Lifelong learning logger',
     long_description=(HERE / 'README.md').read_text(),
     long_description_content_type='text/markdown',
@@ -23,5 +23,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
+        'numpy',
+        'pandas'
     ]
 )
