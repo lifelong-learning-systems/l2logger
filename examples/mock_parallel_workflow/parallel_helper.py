@@ -32,7 +32,7 @@ class RegimeInfo:
         return self._regime['task']
     @property
     def params(self):
-        return json.dumps(self._regime['args'])
+        return self._regime['args']
 
     def to_string(self):
         return f'{self._block_num}-{self._block_type}: regime '\
@@ -50,19 +50,11 @@ class LoggerInfo:
         with open(sys.argv[1]) as f:
             self._data = json.load(f)
         self._logs_base = os.path.join(os.getcwd(), self._data['logging_base'])
+        input_name = sys.argv[1].split(os.path.sep)[-1]
+        print(input_name)
+        self._scenario_dirname = input_name
         self._logger = self._create_logger(self._logs_base)
         self._workers = self._data['threads']
-
-        # Create output directory wihin the logs base (i.e. the syllabus-timestamp folder)
-        input_name = sys.argv[1].split(os.path.sep)[-1]
-        timestamp = l2logger.PerformanceLogger.get_readable_timestamp()
-        self._scenario_dirname = f'{input_name}-{timestamp}'
-        scenario_path = os.path.join(self._logs_base, self._scenario_dirname)
-        os.makedirs(scenario_path, exist_ok=True)
-
-        # Copy this input file into the output directory
-        copy_path = os.path.join(scenario_path, input_name)
-        shutil.copy(sys.argv[1], copy_path)
 
     @property
     def data(self): 
@@ -74,28 +66,17 @@ class LoggerInfo:
     def logger(self):
         return self._logger
 
-    def write_regime(self, regime_info, worker_index):
-        worker_name = f'worker-{worker_index}'
-        record = {
-            'block_num': regime_info.block_num,
-            'regime_num': regime_info.regime_num,
-            'block_type': regime_info.block_type,
-            'worker': worker_name,
-            'task_name': regime_info.task_name,
-            'params': regime_info.params
-        }
-        self.logger.write_new_regime(record, self._scenario_dirname)
-
-    def write_data(self, regime_info, exp_num, reward=1, status='Done'):
+    def write_data(self, regime_info, exp_num, worker_id):
         data_record = {
             'block_num': regime_info.block_num,
-            'regime_num': regime_info.regime_num,
+            'worker_id': worker_id,
+            'block_type': regime_info.block_type,
+            'task_name': regime_info.task_name,
+            'task_params': regime_info.params,
             'exp_num': exp_num,
-            'status': status,
-            'reward': reward,
-            'rand-seed': self._seed
+            'reward': 1
         }
-        self.logger.write_to_data_log(data_record)
+        self.logger.log_record(data_record)
 
     def _create_logger(self, logs_base):
         if not os.path.exists(logs_base):
@@ -109,4 +90,4 @@ class LoggerInfo:
             'script': __file__
         }
         cols = {'metrics_columns': ['reward']}
-        return l2logger.RLPerformanceLogger(logs_base, cols, syllabus_info)
+        return l2logger.DataLogger(logs_base, self._scenario_dirname, cols, syllabus_info)

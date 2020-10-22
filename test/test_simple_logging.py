@@ -3,180 +3,101 @@ import unittest
 import tempfile
 import importlib
 import json
-
-# if importlib.util.find_spec('pandas'):
-#     import pandas as pd
-
 from l2logger import l2logger
-from test_utils import FakeApplication
 
-
-#@unittest.skipUnless(importlib.util.find_spec('pandas'), 'Requires pandas library')
 class TestSimpleScenarios(unittest.TestCase):
-
-    # TODO: reduce code re-use here
-    def test_one_block(self):
-        print('\ntest_one_block')
-        with tempfile.TemporaryDirectory() as logging_dir:
-            logger = l2logger.RLPerformanceLogger(logging_dir)
-            extra_cols = {
-                'reward': 1.5,
-                'rand_seed': 'September 2020'
-            }
-            app = FakeApplication(logger, train_test_cycles=1,
-                                  tasks=1, regimes_per_task=1,
-                                  exp_per_regime=100, extra_cols=extra_cols)
-            app.consume_experiences()
-            app.validate_logs(self, logging_dir)
+    def testErrorInit(self):
+        with tempfile.TemporaryDirectory() as base_dir:
+            self.helperErrorInit(base_dir, 'test_scenario', True)
+            self.helperErrorInit(base_dir, 'test_scenario', {'metrics_columns': {}})
+            self.helperErrorInit(base_dir, 'test_scenario', {'metrics_columns': ['test', 1]})
+            self.helperErrorInit(base_dir, 'test_scenario', {'metrics_columns': []})
+            self.helperErrorInit(base_dir, 'test_scenario', ['metrics_columns'])
+            self.helperErrorInit(base_dir, 'test_scenario', {'col1': {}})
     
-    def test_many_blocks(self):
-        print('\ntest_many_blocks')
-        with tempfile.TemporaryDirectory() as logging_dir:
-            logger = l2logger.RLPerformanceLogger(logging_dir)
-            extra_cols = {'reward': 1, 'seed': 314159, 'author': 'JHU APL'}
-            app = FakeApplication(logger, train_test_cycles=5, tasks=4,
-                                   regimes_per_task=2, exp_per_regime=100,
-                                   extra_cols=extra_cols)
-            app.consume_experiences()
-            app.validate_logs(self, logging_dir)
-    
-    def test_stress_blocks(self):
-        print('\ntest_stress_blocks')
-        with tempfile.TemporaryDirectory() as logging_dir:
-            logger = l2logger.RLPerformanceLogger(logging_dir)
-            extra_cols = {'test_name': 'stress', 'reward': 42}
-            app = FakeApplication(logger, train_test_cycles=100, tasks=10,
-                                   regimes_per_task=10, exp_per_regime=5,
-                                   extra_cols=extra_cols)
-            app.consume_experiences()
-            app.validate_logs(self, logging_dir)
+    def helperErrorInit(self, top_dir, scenario, logger_info=None, scenario_info=None):
+        self.assertRaises(Exception, l2logger.DataLogger,
+            top_dir, scenario, logger_info, scenario_info)
 
-    def test_stress_data(self):
-        print('\ntest_stress_data')
-        with tempfile.TemporaryDirectory() as logging_dir:
-            logger = l2logger.RLPerformanceLogger(logging_dir)
-            extra_cols = {'test_name': 'stress', 'reward': 42}
-            app = FakeApplication(logger, train_test_cycles=4, tasks=5,
-                                   regimes_per_task=5, exp_per_regime=500,
-                                   workers=100, extra_cols=extra_cols)
-            app.consume_experiences()
-            app.validate_logs(self, logging_dir)
-    
-
-
-    def test_meta_files_default(self):
-        print('\ntest_meta_files_default')
-        self.meta_files_helper(None, None, {'metrics_columns': []}, {})
-
-    def test_meta_files(self):
-        print('\ntest_meta_files')
-        # make sure order is retained
-        cols = {'metrics_columns': ['temp1', 'reward', 'temp2']}
-        info = {
-            'author': 'JHU APL',
-            'list_test': [1, 2, 4, 3],
-            'dict': {
-                'nested_dict': {'a': 2, 'field': False},
-                'nested_list': [[1, 2], [2, 3], [3, 1]]
+    def testValidRecord(self):
+        with tempfile.TemporaryDirectory() as base_dir:
+            metric_cols = ['reward']
+            valid_standard = {
+                'block_num': 4, 'exp_num': 4, 'worker_id': 'worker0',
+                'block_type': 'train', 'task_name': 'taskA',
+                'task_params': {'param1': 1}, 'exp_status': 'complete'
             }
-        }
-        self.meta_files_helper(cols, info, cols, info)
-        
-    def meta_files_helper(self, cols, info, expected_cols, expected_info):
-        print('\tmeta_files_helper')
-        with tempfile.TemporaryDirectory() as logging_dir:
-            logger = l2logger.RLPerformanceLogger(logging_dir, cols, info)
-            self.assertEqual(logger.toplevel_dir, logging_dir)
-            scenario = 'unit_test_meta'
-            # create directory structure; should also create meta info files
-            _ = self.create_and_validate_structure(logger, scenario, 1, 1, 1)
-            col_path = os.path.join(logging_dir, scenario, 'column_info.json')
-            info_path = os.path.join(logging_dir, scenario, 'scenario_info.json')
-            self.assertTrue(os.path.exists(col_path))
-            self.assertTrue(os.path.exists(info_path))
-            with open(col_path) as f:
-                data = json.load(f)
-                self.assertDictEqual(data, expected_cols)
-            with open(info_path) as f:
-                data = json.load(f)
-                self.assertDictEqual(data, expected_info)
-            print('\tmeta files (column_info.json and scenario_info.json) correct')
+            valid_metrics = {'reward': 123}
+            valid_full = valid_standard.copy()
+            valid_full.update(valid_metrics.copy())
+            validHelper = lambda records: self.helperValidRecord(base_dir, metric_cols, records)
 
-    def test_single_directory(self):
-        print('\ntest_single_directory')
-        with tempfile.TemporaryDirectory() as logging_dir:
-            logger = l2logger.RLPerformanceLogger(
-                logging_dir
-            )
-            self.assertEqual(logger.toplevel_dir, logging_dir)
-            _ = self.create_and_validate_structure(
-                logger=logger, scenario_name='unit_scenario',
-                num_workers=1, num_blocks=1, num_tasks=1
-            )
+            validHelper([valid_full])
+            validHelper([valid_full, valid_full])
+            validHelper([valid_full, self.helperUpdate(valid_full, {'exp_num': 20})])
+            validHelper([valid_full, self.helperUpdate(valid_full, {'block_num': 10})])
+            validHelper([self.helperUpdate(valid_full, {'exp_status': 'incomplete'})])
+            validHelper([self.helperUpdate(valid_full, {'block_type': 'test'})])
 
-    def test_stress_directory(self):
-        print('\ntest_stress_directory')
-        with tempfile.TemporaryDirectory() as logging_dir:
-            logger = l2logger.RLPerformanceLogger(
-                logging_dir
-            )
-            self.assertEqual(logger.toplevel_dir, logging_dir)
-            _ = self.create_and_validate_structure(
-                logger=logger, scenario_name='unit_scenario',
-                num_workers=17, num_blocks=23, num_tasks=19
-            )
-
-
-    # tests creating directory structure via the "update_context_only" flag
-    # only checks the directories; does NOT examine log or meta-data files
-    def create_and_validate_structure(self, logger, scenario_name, num_workers, num_blocks, num_tasks):
-        print('\tcreate_and_validate_structure')
-        contexts=[]
-        for w in range(0, num_workers):
-            worker = f'worker{w}'
-            for b in range(0, num_blocks):
-                block_type = 'test' if b % 2 else 'train'
-                block =f'{b}-{block_type}'
-                for t in range(0, num_tasks):
-                    task=f'task{t}'
-                    contexts.append((worker, block, task))
-        expected_dirs = set('.')
-        for worker_name, block_name, task_name in contexts:
-            cur_path = worker_name
-            expected_dirs.add(cur_path)
-            cur_path = os.path.join(cur_path, block_name)
-            expected_dirs.add(cur_path)
-            cur_path = os.path.join(cur_path, task_name)
-            expected_dirs.add(cur_path)
-
-            block_num, block_type = block_name.split('-')
-            block_num = int(block_num)
-            record = {
-                'worker': worker_name,
-                'task_name': task_name,
-                'block_num': block_num,
-                'block_type': block_type
+    def testErrorRecord(self):
+        with tempfile.TemporaryDirectory() as base_dir:
+            metric_cols = ['reward2', 'reward1', 'reward1']
+            valid_standard = {
+                'block_num': 4, 'exp_num': 4, 'worker_id': 'worker0',
+                'block_type': 'train', 'task_name': 'taskA',
+                'task_params': {'param1': 1}, 'exp_status': 'complete'
             }
-            logger.write_new_regime(record, scenario_name, True)
-        scenario_dir = os.path.join(logger.toplevel_dir, scenario_name)
-        dirs = TestSimpleScenarios.walk_directory_tree_relative(scenario_dir)
-        expected_num = 1 + num_workers + num_workers*num_blocks + num_workers*num_blocks*num_tasks
-        # sanity check first
-        self.assertEqual(expected_num, len(expected_dirs))
-        self.assertEqual(expected_num, len(dirs))
-        # ignore list order; check if contents are the same ignoring order
-        self.assertCountEqual(expected_dirs, dirs)
-        print(f'\t{expected_num} dirs created correctly')
-        return contexts
+            valid_metrics = {'reward1': 123, 'reward2': 456}
+            valid_full = valid_standard.copy()
+            valid_full.update(valid_metrics.copy())
 
-    # Adapted from learnkit/utils.py
-    @classmethod
-    def walk_directory_tree_relative(cls, dirname):
-        found_dirs = []
-        for (dirpath, _, _) in os.walk(dirname, topdown=True):
-            relative_path = os.path.relpath(dirpath, dirname)
-            found_dirs.append(relative_path)
-        return found_dirs
+            errHelper = lambda records: self.helperErrorRecord(base_dir, metric_cols, records)
+            # missing cols
+            errHelper([valid_standard])
+            errHelper([valid_metrics])
+            errHelper([{}])
+            errHelper([['not even a dict']])
+            # timestamp overwriting
+            errHelper([self.helperUpdate(valid_full, {'timestamp': 2})])
+            # increasing and decreasing col count
+            errHelper([valid_full, self.helperUpdate(valid_full, {'extra': 2})])
+            errHelper([self.helperUpdate(valid_full, {'extra': 2}), valid_full])
+            # invalid block_nums: string, then negative, then decreasing
+            errHelper([self.helperUpdate(valid_full, {'block_num': 'temp'})])
+            errHelper([self.helperUpdate(valid_full, {'block_num': -1})])
+            errHelper([valid_full, self.helperUpdate(valid_full, {'block_num': 2})])
+            # invalid exp_nums: string, then negative, then decreasing
+            errHelper([self.helperUpdate(valid_full, {'exp_num': 'temp'})])
+            errHelper([self.helperUpdate(valid_full, {'exp_num': -1})])
+            errHelper([valid_full, self.helperUpdate(valid_full, {'exp_num': 3})])
+            # invalid block_type
+            errHelper([self.helperUpdate(valid_full, {'block_type': 'temp'})])
+            # invalid exp_status
+            errHelper([self.helperUpdate(valid_full, {'exp_status': 'Done'})])
+            # invalid worker_id
+            errHelper([self.helperUpdate(valid_full, {'worker_id': 'a+b'})])
+            # invalid task_params
+            errHelper([self.helperUpdate(valid_full, {'task_params': True})])
+            errHelper([self.helperUpdate(valid_full, {'task_params': {'temp': os}})])
+
+    def helperErrorRecord(self, top_dir, cols, records):
+        logger = l2logger.DataLogger(top_dir, 'test', {'metrics_columns': cols})
+        temp_func = lambda logger, records: [logger.log_record(r) for r in records]
+        self.assertRaises(RuntimeError, temp_func, logger, records)
+        #temp_func(logger, records)
+    
+    def helperValidRecord(self, top_dir, cols, records):
+        logger = l2logger.DataLogger(top_dir, 'test', {'metrics_columns': cols})
+        temp_func = lambda logger, records: [logger.log_record(r) for r in records]
+        try:
+            temp_func(logger, records)
+        except RuntimeError:
+            self.fail('Record failed validity checks in log_record')
+    
+    def helperUpdate(self, record, fields):
+        new_record = record.copy()
+        new_record.update(fields)
+        return new_record
 
 if __name__ == "__main__":
     unittest.main()

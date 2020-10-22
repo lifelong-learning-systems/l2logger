@@ -2,9 +2,9 @@
 
 In this folder, there are two examples for demonstrating effective usage of
 the logger. Additionally in thie folder, there are example
-`scenario_info.json` and `column_info.json` files that were produced from a
+`scenario_info.json` and `logger_info.json` files that were produced from a
 run of `mock_simple_workflow`
-- [example_column_info.json](example_column_info.json)
+- [example_logger_info.json](example_logger_info.json)
 - [example_scenario_info.json](example_scenario_info.json)
 
 ## mock_simple_workflow
@@ -16,8 +16,8 @@ library. Consists of three files:
     contains all interfacing calls with it
 - `mock_agent.py`:
     - A helper file to manage the RL "magic" side of things, e.g. parsing
-    an example scenario input file, managing the `block_num`, `regime_num`, 
-    `exp_num` sequences as it goes.
+    an example scenario input file, managing the `block_num` and `exp_num`
+    sequences as it goes.
     - Contains excessively simple `Experience` class representing an RL task;
     upon invocation, just returns hardcoded 'reward' and 'debug_info' columns.
 - `simple_scenario.json`
@@ -27,7 +27,9 @@ library. Consists of three files:
     - Note that this format is not special in any way; it is just convenient
     for the example to show the API of the logger.
     Clients can use whatever scheme fits their codebase best in order to
-    generate the sequences of blocks, regimes, and experiences.
+    generate the sequences of blocks and experiences. For instance, the 
+    example uses the term `regime` to refer to groups of experiences within
+    a single block that have the same `task_name` and `task_params`.
         - This is true for the parallel example below as well
 
 Ensure the l2 virtual environment is active, then run simply via:

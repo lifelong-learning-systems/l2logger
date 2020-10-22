@@ -18,51 +18,44 @@
 
 import os
 import re
+from functools import partial
 import csv
 import time
 import json
 from datetime import datetime
 
-def _sanitize_task_name(name):
-    return re.sub('[.]', '_', name).lower()
-
-
-def get_log_foldername(path, format_str="{scenario}-{timestamp}"):
-    scenario_name = os.path.basename(os.path.basename(path)).split('.')[0]
-    # int(round(time.time() * 1000))
-    timestamp = re.sub('[.]', '-', str(time.time()))
-    return format_str.format(scenario=scenario_name, timestamp=timestamp)
 
 
 class TSVLogFile():
-    def __init__(self, log_file_name):
-        self.log_file_name = log_file_name
+    def __init__(self, log_file_name, fieldnames):
+        self._log_file_name = log_file_name
         self._initialized = False
+        # actual file handle, result of calling open
         self._tsv_log_file = None
+        # csv DictWriter object
         self._tsv_log = None
-        self._fieldnames = None
+        # ordered list of fieldnames
+        self._fieldnames = fieldnames
 
-    def _initialize(self, fieldnames):
-        self._fieldnames = self.order_fieldnames(fieldnames)
-        if not self._fieldnames:
-            raise RuntimeError(
-                "Fieldnames not specified for TSV log file {0}".format(self.log_file_name))
-        if os.path.exists(self.log_file_name):
+    def _initialize(self):
+        if os.path.exists(self._log_file_name):
             mode, write_header = "a", False
         else:
-            (dir_name, filename) = os.path.split(self.log_file_name)
-            os.makedirs(dir_name, exist_ok=True)
             mode, write_header = "w", True
-        self._tsv_log_file = open(self.log_file_name, mode)
+        self._tsv_log_file = open(self._log_file_name, mode)
         self._tsv_log = csv.DictWriter(self._tsv_log_file, fieldnames=self._fieldnames,
                                        delimiter='\t', quotechar='"', lineterminator='\n')
         if write_header:
             self._tsv_log.writeheader()
         self._initialized = True
+    
+    def __del__(self, *args):
+        self.close()
 
+    # validation handled in caller
     def add_row(self, record):
         if not self._initialized:
-            self._initialize(fieldnames=list(record.keys()))
+            self._initialize()
         self._tsv_log.writerow(record)
         self._tsv_log_file.flush()
 
@@ -71,165 +64,184 @@ class TSVLogFile():
             self._tsv_log_file.close()
             self._initialized = False
 
-    def order_fieldnames(self, fieldnames):
-        # default implementation
-        return fieldnames
+class DataLogger():
 
+    _LOG_FORMAT_VERSION = '1.0'
 
-class DataLog(TSVLogFile):
-    def __init__(self, output_dir):
-        log_file_name = os.path.join(output_dir, "data-log.tsv")
-        super().__init__(log_file_name)
-        self._standard_fields = None
-
-    def order_fieldnames(self, fieldnames):
-        # TODO: should be ordered sets?
-        fieldnames_set = set(fieldnames)
-        standard_fields_set = set(self._standard_fields)
-        if not fieldnames_set.issuperset(standard_fields_set):
-            raise RuntimeError("Unexpected field names for data log")
-        updated_fields = self._standard_fields
-        updated_fields.extend(list(fieldnames_set - standard_fields_set))
-        return updated_fields
-
-
-# hierarchy: block_sequence, sub_task (local to block), task (global across blocks)
-class RLDataLog(DataLog):
-    def __init__(self, *args):
-        super().__init__(*args)
+    def __init__(self, logging_base_dir, scenario_name, logger_info, scenario_info=None):
         self._standard_fields = [
-            'block_num', 'regime_num', 'exp_num', 'status', 'timestamp'
+            'block_num', 'exp_num', 'worker_id', 'block_type', 'task_name', 
+            'task_params', 'exp_status', 'timestamp'
         ]
-
-
-class ClassifDataLog(DataLog):
-    def __init__(self, *args):
-        super().__init__(*args)
-        self._standard_fields = [
-            'block_num', 'regime_num', 'exp_num', 'timestamp'
-        ]
-
-
-class BlocksLog(TSVLogFile):
-    def __init__(self, output_dir):
-        log_file_name = os.path.join(output_dir, "block-info.tsv")
-        super().__init__(log_file_name)
-
-    def order_fieldnames(self, fieldnames):
-        standard_fields = ['block_num', 'regime_num', 'block_type', 'worker', 'task_name', 'params']
-        if set(standard_fields) != set(fieldnames):
-            print(standard_fields)
-            print(fieldnames)
-            raise RuntimeError("Unexpected field names for blocks log")
-        return standard_fields
-
-
-class PerformanceLogger():
-    def __init__(self, toplevel_dir, column_info=None, scenario_info=None):
-        self._toplevel_dir = toplevel_dir
-
-        # TODO: determine what constraints to put on column_info and scenario_info
-        # scenario_info is object containing whatever the caller desires
-        # column_info is object with key for metric columns
+        self._logging_base_dir = logging_base_dir
+        # should be logging_base_dir/scenario-TIMESTAMP
+        self._scenario_dir = os.path.join(self._logging_base_dir, self._get_log_foldername(scenario_name))
         col_key = 'metrics_columns'
-        # default to empty list
-        self._column_info = column_info or {col_key: []}
-        assert(col_key in self._column_info)
-        assert(all(isinstance(s, str) for s in self._column_info[col_key]))
-        # coalesce if the scenario_info object is false-y
+        version_key = 'log_format_version'
+        self._logger_info = logger_info
+        if not type(self._logger_info) is dict or not col_key in self._logger_info:
+            raise RuntimeError(f'logger_info missing required key \'{col_key}\'')
+        self._metric_fields = self._logger_info[col_key]
+        if not type(self._metric_fields) is list or any(type(s) is not str for s in self._metric_fields):
+            raise RuntimeError(f'logger_info[\'{col_key}\'] must be a list of strings')
+        if not len(self._metric_fields):
+            raise RuntimeError(f'logger_info[\'{col_key}\'] cannot be empty')
+        self._logger_info[version_key] = DataLogger._LOG_FORMAT_VERSION
+
         self._scenario_info = scenario_info or {}
+        self.write_info_files()
 
+        self._tsv_logger = None
         self._logging_dir = None
-        self.data_log = None
-        self.blocks_log = None
-        self._logging_context = None
-        self._data_logger_class = None
-        self._blocks_logger_class = None
-        # os.makedirs(self._toplevel_dir, exist_ok=True)
+        # state for validation
+        self._all_fields_ordered = None
+        self._last_exp_num = None
+        self._last_block_num = None
+        self._default_exp_status = 'complete'
+        self._default_worker_id = 'worker-default'
+        self._block_types = ['train', 'test']
+        self._exp_statuses = ['complete', 'incomplete']
+        self._worker_pattern = re.compile(r'[0-9a-zA-Z_\-.]+')
+
 
     @property
-    def logging_dir(self):
-        return self._logging_dir
+    def logging_base_dir(self):
+        return self._logging_base_dir
 
     @property
-    def toplevel_dir(self):
-        return self._toplevel_dir
+    def scenario_dir(self):
+        return self._scenario_dir
+    
+    @property
+    def logger_info(self):
+        return self._logger_info
+    
+    @property
+    def scenario_info(self):
+        return self._scenario_info
 
-    def _check_and_update_context(self, state: dict):
-        # keys: worker, phase_filename, task
-        new_logging_context = (state['scenario_dirname'], state['worker_dirname'],
-                               state['block_dirname'], state['task_dirname'])
+    def write_info_files(self):
+        os.makedirs(self._scenario_dir, exist_ok=True)
+        logger_info_path = os.path.join(self._scenario_dir, 'logger_info.json')
+        scenario_info_path = os.path.join(self._scenario_dir, 'scenario_info.json')
+        with open(logger_info_path, 'w+') as column_file:
+            column_file.write(json.dumps(self._logger_info, indent=2))
+        with open(scenario_info_path, 'w+') as scenario_file:
+            scenario_file.write(json.dumps(self._scenario_info, indent=2))
 
-        if new_logging_context != self._logging_context:
-            self.close_logs()
-            assert(self._toplevel_dir is not None)
-            self._logging_dir = os.path.join(
-                self._toplevel_dir, os.path.sep.join(new_logging_context))
+
+    def log_record(self, record_in):
+        record = self._augment_fields(record_in)
+        self._validate_record(record)
+        self._update_state(record)
+
+        record['task_params'] = json.dumps(record['task_params'])
+        self._tsv_logger.add_row(record)
+    
+    def close(self):
+        if self._tsv_logger:
+            self._tsv_logger.close()
+
+    # ensure all record fields are valid
+    def _validate_record(self, record):
+        self._validate_fields(record)
+        self._validate_block_type(record['block_type'])
+        self._validate_exp_status(record['exp_status'])
+        self._validate_worker_id(record['worker_id'])
+        self._validate_task_params(record['task_params'])
+        self._validate_block_num(record['block_num'])
+        self._validate_exp_num(record['exp_num'])
+
+    # adds any automated fields to record (i.e. timestamp)
+    def _augment_fields(self, record):
+        if not type(record) is dict:
+            raise RuntimeError('record must be dict')
+        new_record = record.copy()
+        if 'timestamp' in new_record:
+            raise RuntimeError('timestamp column cannot be overwritten')
+        else:
+            new_record['timestamp'] = datetime.now().strftime('%Y%m%dT%H%M%S.%f')
+        if not 'exp_status' in new_record:
+            new_record['exp_status'] = self._default_exp_status
+        if not 'worker_id' in new_record:
+            new_record['worker_id'] = self._default_worker_id
+        return new_record
+
+    def _update_state(self, record):
+        if not self._all_fields_ordered:
+            self._init_fields(record)
+        self._last_block_num = record['block_num']
+        self._last_exp_num = record['exp_num']
+
+        old_logging_dir = self._logging_dir
+        self._logging_dir = os.path.join(
+            self._scenario_dir, record['worker_id'], 
+            f'{str(record["block_num"])}-{record["block_type"]}')
+        if old_logging_dir != self._logging_dir:
             os.makedirs(self._logging_dir, exist_ok=True)
-            self._logging_context = new_logging_context
+            if self._tsv_logger:
+                self._tsv_logger.close()
+            log_file_name = os.path.join(self._logging_dir, 'data-log.tsv')
+            self._tsv_logger = TSVLogFile(log_file_name, self._all_fields_ordered)
+        
+    def _init_fields(self, record):
+        standard_set = set(self._standard_fields)
+        record_set = set(record.keys())
+        extra_fields = list(record_set - standard_set)
+        extra_fields.sort()
+        self._all_fields_ordered = self._standard_fields.copy()
+        self._all_fields_ordered.extend(extra_fields)
 
-            scenario_dir = os.path.sep.join((self._toplevel_dir, state['scenario_dirname']))
-            column_info_path = os.path.sep.join((scenario_dir, "column_info.json"))
-            scenario_info_path = os.path.sep.join((scenario_dir, "scenario_info.json"))
-            self._write_info_files(column_info_path, scenario_info_path)
-            self.data_log = self._data_logger_class(self._logging_dir)
-            self.blocks_log = self._blocks_logger_class(self._logging_dir)
+    def _validate_fields(self, record):
+        if not self._all_fields_ordered:
+            standard_set = set(self._standard_fields)
+            metric_set = set(self._metric_fields)
+            record_set = set(record.keys())
+            if not record_set.issuperset(standard_set):
+                raise RuntimeError(f'standard record fields missing: expected at least ' \
+                                f'{standard_set}, got {record_set}')
+            if not record_set.issuperset(metric_set):
+                raise RuntimeError(f'metric record fields missing: expected at least ' \
+                                f'{metric_set}, got {record_set}')
+        elif set(self._all_fields_ordered) != set(record.keys()):
+            raise RuntimeError(f'record field mismatch: expected ' \
+                               f'{set(self._all_fields_ordered)}, got ' \
+                               f'{set(record.keys())}')
 
-    def _write_info_files(self, column_info_path, scenario_info_path):
-        # For now, open the info json files, then create the file (exist already is not ok)
-        if not os.path.exists(column_info_path):
-            with open(column_info_path, 'w+') as column_file:
-                column_file.write(json.dumps(self._column_info, indent=2))
-        if not os.path.exists(scenario_info_path):
-            with open(scenario_info_path, 'w+') as scenario_file:
-                scenario_file.write(json.dumps(self._scenario_info, indent=2))
+    def _validate_block_num(self, block_num):
+        if (not type(block_num) is int) or block_num < 0:
+            raise RuntimeError(f'block_num must be non-negative integer')
+        elif (not self._last_block_num is None) and block_num < self._last_block_num:
+            raise RuntimeError('block_num must be non-decreasing')
 
-    def close_logs(self):
-        if self.data_log:
-            self.data_log.close()
-        if self.blocks_log:
-            self.blocks_log.close()
+    def _validate_exp_num(self, exp_num):
+        if (not type(exp_num) is int) or exp_num < 0:
+            raise RuntimeError(f'exp_num must be non-negative integer')
+        elif (not self._last_exp_num is None) and exp_num < self._last_exp_num:
+            raise RuntimeError('exp_num must be non-decreasing')
+    
+    def _validate_block_type(self, block_type):
+        if not block_type in self._block_types:
+            raise RuntimeError(f'block_type must be one of {self._block_types}')
+    
+    def _validate_exp_status(self, exp_status):
+        if not exp_status in self._exp_statuses:
+            raise RuntimeError(f'exp_status must be one of {self._exp_statuses}')
+    
+    def _validate_worker_id(self, worker_id):
+        if re.fullmatch(self._worker_pattern, worker_id) is None:
+            raise RuntimeError(f'worker_id can only contain alphanumeric characters, hyphens, dashes, or periods')
+    
+    def _validate_task_params(self, task_params):
+        if type(task_params) is not dict:
+            raise RuntimeError('task_params must be dict')
+        try:
+            json.dumps(task_params)
+        except:
+            raise RuntimeError('task_params must be valid json')
 
-    @classmethod
-    def get_readable_timestamp(cls):
-        return datetime.now().strftime('%Y%m%dT%H%M%S.%f')
-
-    def _get_block_dirname(self, block_num, block_type):
-        return f'{block_num}-{block_type}'
-
-    def write_new_regime(self, record: dict, scenario_dirname: str, update_context_only=False):
-        # required fields, even before the add_row call
-        assert('worker' in record)
-        assert('block_num' in record)
-        assert('block_type' in record)
-        assert('task_name' in record)
-        self._check_and_update_context({
-            'scenario_dirname': scenario_dirname,
-            'worker_dirname': record['worker'],
-            'block_dirname': self._get_block_dirname(record['block_num'],
-                                                     record['block_type']),
-            'task_dirname': record['task_name']
-        })
-        if not update_context_only:
-            self.blocks_log.add_row(record)
-
-    def write_to_data_log(self, record: dict):
-        # automating timestamp generation if not provided
-        if not 'timestamp' in record:
-            record['timestamp'] = PerformanceLogger.get_readable_timestamp()
-        self.data_log.add_row(record)
-
-
-class RLPerformanceLogger(PerformanceLogger):
-    def __init__(self, *args):
-        super().__init__(*args)
-        self._data_logger_class = RLDataLog
-        self._blocks_logger_class = BlocksLog
-
-
-# TODO: determine differences between this and RLPerformanceLogger
-class ClassifPerformanceLogger(PerformanceLogger):
-    def __init__(self, *args):
-        super().__init__(*args)
-        self._data_logger_class = ClassifDataLog
-        self._blocks_logger_class = BlocksLog
+    def _get_log_foldername(self, path, format_str="{scenario}-{timestamp}"):
+        scenario_name = os.path.basename(os.path.basename(path)).split('.')[0]
+        # int(round(time.time() * 1000))
+        timestamp = re.sub('[.]', '-', str(time.time()))
+        return format_str.format(scenario=scenario_name, timestamp=timestamp)

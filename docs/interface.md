@@ -3,20 +3,30 @@
 
 ## Initialization
 
-The logger is instantiated by creating an instance of one of two sub-classes
-of PerformanceLogger:
-- RLPerformanceLogger
-- ClassifPerformanceLogger
+The logger is instantiated by creating an instance of the `DataLogger` class 
 
-These differ only in the base columns required when writing to the data log.
-The logger takes three input arguments, only the first of which is required:
-- `toplevel_dir`: this is the `logging_base_dir` as described in
-[logger_output.md](./logger_output.md)
-- `column_info` (default: `{'metrics_columns':[]}`):
+The logger takes four input arguments, with the last one optional.
+- `logging_base_dir`:
+  - This is the highest level directory, as visualized in
+  [log_format.md](./log_format.md)
+  - For example, this could be the `L2DATA` environment variable, which you
+    can get via the provided util function `get_l2data_root` below
+- `scenario_name`:
+  - The name of the current scenario which is running.
+  - This will be appended with a human readable timestamp upon
+    initialization of the object to form the `scenario_dir`, as 
+    shown in [log_format.md](./log_format.md)
+- `logger_info`:
     - dict of column data desired by the developer. Object is required to
     contain at minimum 'metrics_columns', a list of columns which metrics can
-    be computed on. This is primarily used by `l2metrics` as a validation step
-    - See [here](../examples/example_column_info.json) for an example file
+    be computed on. Note that this list cannot be empty.
+    - See [here](../examples/example_logger_info.json) for an example file
+    - This is primarily used as a validation step in the `l2metrics` module
+        - It's also validated that all of these fields exist in the record
+        passed in to the `log_record` function below
+    - The logger will also add the field `log_format_version` with the
+      format version as defined in [log_format.md](./log_format.md)
+      automatically
 - `scenario_info` (default: `{}`):
   - the dict of meta data desired by the developer. There are no requirements
   on what this object contains, but for example could be 'author', or 'version'
@@ -27,105 +37,107 @@ Thus, an example instantiation of the logger is as follows:
 from l2logger import l2logger
 ...
 dir = 'l2_logs'
-cols = ['reward']
+name = 'test_scenario'
+cols = {'metrics_columns': ['reward']}
 meta = {'author': 'JHU APL', 'scenario_version': '0.1'}
-perf_logger = l2logger.RLPerformanceLogger(dir, cols, meta)
+logger = l2logger.DataLogger(dir, name, cols, meta)
 ```
+Something to note here is that the `logger_info` and `scenario_info` files
+get written to disk in this __init__ function, rather than on the first
+`log_record` call.
 
 ## Writing Data
 
-There are two main member functions used to interface with the logger, 
-`write_new_regime` and `write_to_data_log`.
+The function used to actually write data into the log is 
+`log_record`. This takes in a python object containing at minimum
+the following fields: 
+- `block_num`
+- `exp_num`
+- `worker_id`
+- `block_type`
+- `task_name`
+- `task_params`
+- `exp_status`
 
-Within the records passed into those functions, the `block_num`,
-`regime_num`, and `exp_num` fields should all be globally incrementing,
-zero-indexed counts:
-- The `block_num` and `regime_num` fields in `write_to_data_log` should match those in
-  the `write_new_regime` record
-- **Note that the client is responsible for incrementing/managing these
-  sequences; the l2metrics module relies on them extensively**
-    - For details/examples of what these sequences should look like, see
-    the 'Example' section within [definitions.md](./definitions.md)
+Any additional fields will simply be appended as their own columns in
+alphabetical order after these. This **also** needs to include all of the
+fields from the `metrics_columns` list within the `logger_info` provided at
+instantiation to the logger. Additionally note that every call to this 
+function needs to contain **exactly the same** columns as the first call, 
+and that a `timestamp` column is automatically provided by the logger.
+
+Here's a deeper dive on the constraints and description of each field:
+- `block_num`
+  - a non-negative integer
+  - cannot be less than the previous `block_num`
+  - note that this function is not thread-safe, so if used in a
+    multi-threaded context will require synchronization on the caller
+    side
+- `exp_num`
+  - same constraint as above; non-negative, non-decreasing integer
+- `worker_id`
+  - string; can only contain alphanumeric characters, hyphens, 
+    dashes, and periods.
+  - if not provided, will *default* to 'worker-default'
+- `block_type`
+  - string; can only be one of 'train' or 'test'
+- `task_name`
+  - string; no restrictions
+- `task_params`
+  - dict; must be JSON serializable (can have `json.dumps(...)` invoked)
+- `exp_status`
+  - string; must be one of 'complete' or 'incomplete'
+  - if not provided, will *default* to 'complete'
+  - note that exactly one call to `log_record` for a specific `exp_num` 
+    should have the `exp_status` of 'complete'
+      - this indicates to the `l2metrics` module which row to pull the
+        reward value from, if there were multiple to choose from for a
+        specific `exp_num`
   
 
-### `write_new_regime`:
-This function should typically be called at the start of
-a new regime for a given worker.
-It sets the "logging context" (i.e. creates the directory
-structure for a particular "worker-block-task" combination), as well as
-appends a row to the `block-info.tsv` file therein.
-Subsequent calls to `write_to_data_log` will use this "logging context" as the
-directory in which `data-log.tsv` will be appended to; as such, this function 
-**must** be invoked at least once before a call to `write_to_data_log`.
+For a more comprehensive example of usage of this interface, please look
+at the examples as explained [here](../examples/README.md).
 
-`write_new_regime` has two required arguments:
-- `record`
-    - Python dictionary containing the following entries:
-        - `block_num`: int, block sequence index
-        - `regime_num`: int, regime sequence index
-        - `block_type`: str, e.g. 'train' or 'test'
-        - `worker`: str, name of the current worker (e.g. 'thread-1')
-        - `task_name`: str, current task (e.g. 'Task-A-5x5')
-        - `params`: str, JSON string of any parameters for the task ('size', etc.)
-    - If more fields are provided than these in record, they will simply be
-    appended as additional columns in block-info.tsv. Note that all records
-    should have the same number of columns (i.e., if extra fields are
-    supplied for one row in the data log, they should be supplied for all the
-    other rows as well).
-- `scenario_dirname`: str, as described above, folder name for this run of the scenario
+## Closing log files
 
-### `write_to_data_log`:
-This function, as mentioned above, assumes that the logging context has
-already been created/switched to. It should be invoked at least once per
-individual experience.
-
-`write_to_data_log` requires a single argument:
-- `record`
-    - Python dictionary containing the following entries:
-        - `block_num`: int, block sequence index
-        - `regime_num`: int, regime sequence index
-        - `exp_num`: int, experience sequence index
-        - `status`: str, an arbitrary status indicating how the agent
-        processed the experience
-            - e.g. 'success' for a completed experience, 'env-error' for an error
-              in the environment, etc.
-            - **This field is only required for `RLPerformanceLogger`,
-              not `ClassifPerformanceLogger`**
-        - `timestamp`: str, current timestamp. Suggested to get through 
-            `PerformanceLogger.get_readable_timestamp`, described below.
-            - **If this is *not* provided, then the logger will
-            automatically insert this field via `get_readable_timestamp`**
-    - Same as above: if more fields are provided than these in record, they
-    will simply be appended as additional columns in data-log.tsv. Note that
-    all records should have the same number of columns (i.e., if extra fields
-    are supplied for one row in the data log, they should be supplied for all
-    the other rows as well). This includes common (but not standard) fields
-    such as 'reward' or 'random_seed'
-
-For a more comprehensive example of usage of this interface, please look at the
-examples as explained [here](../examples/README.md).
+When the program is complete, you should invoke the `close` function on the
+DataLogger object, i.e.:
+```
+logger = l2logger.DataLogger(...)
+# do RL tasks
+...
+logger.close()
+```
 
 ## Utils
 
-The performance logger provides several utility functions which may be useful
+The logger provides several utility functions which may be useful
 to the developer. These include:
 
-- `PerformanceLogger.get_readable_timestamp(cls)`
-    - class method in PerformanceLogger which returns a human readable string
+- `DataLogger.get_readable_timestamp(cls)`
+    - class method in DataLogger which returns a human readable string
       of the current time. Useful for the `timestamp` column in data records:
     ```
-    ts = l2logger.PerformanceLogger.get_readable_timestamp()
+    ts = l2logger.DataLogger.get_readable_timestamp()
     ```
-- `PerformanceLogger.toplevel_dir`
+- `DataLogger.logging_base_dir`
     - property returning the top level directory that was passed into the
     logger's constructor:
     ```
-    root_dir = logger_obj.toplevel_dir
+    root_dir = logger_obj.logging_base_dir
     ```
-- `PerformanceLogger.logging_dir`
-    - property returning the current logging directory, as in the top level
-    directory + the subfolder structure to get to the current log files:
+- `DataLogger.scenario_dir`
+    - property returning the scenario directory created, as in the
+      `logging_base_dir` followed by the scenario name and generated,
+       readable timestamp
     ```
-    log_dir = logger_obj.logging_dir
-    # e.g. 'logs/a-1600697775-609517/thread-0/0-train/A'
+    log_dir = logger_obj.scenario_dir
+    # e.g. 'logs/scenario-1600697775-609517/'
+    ```
+
+- `util.get_l2data_root`
+    - returns the root directory where L2 data and logs are saved via the 
+      environment variable "L2DATA":
+    ```
+    logging_base_dir = util.get_l2data_root()
     ```
