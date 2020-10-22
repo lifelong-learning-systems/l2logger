@@ -189,13 +189,23 @@ def read_logger_info(input_dir):
         return logger_info['metrics_columns']
 
 
-def validate_log(data):
+def validate_log(data, metric_fields):
     # Initialize values
     last_block_num = None
     last_exp_num = None
     block_types = ['train', 'test']
     exp_statuses = ['complete', 'incomplete']
     worker_pattern = re.compile(r'[0-9a-zA-Z_\-.]+')
+    standard_fields = ['block_num', 'exp_num', 'worker_id', 'block_type', 'task_name',
+                       'task_params', 'exp_status', 'timestamp']
+
+    # Validate columns
+    if not set(data.columns).issuperset(standard_fields):
+        raise RuntimeError(f'standard fields missing: expected at least ' \
+                        f'{standard_fields}, got {set(data.columns)}')
+    if not set(data.columns).issuperset(metric_fields):
+                raise RuntimeError(f'metric record fields missing: expected at least ' \
+                                f'{metric_fields}, got {set(data.columns)}')
 
     # Iterate over all rows of log data
     for index, row in data.iterrows():

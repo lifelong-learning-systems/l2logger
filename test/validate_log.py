@@ -35,13 +35,17 @@ def run():
 
     # Attempt to read log data
     log_data = util.read_log_data(args.log_dir)
-    log_data = util.fill_regime_num(log_data)
-    log_data = log_data.sort_values(
-        by=['regime_num', 'exp_num']).set_index("regime_num", drop=False)
+
+    # Get metric fields
+    metric_fields = util.read_logger_info(args.log_dir)
 
     # Validate log format
-    util.validate_log(log_data)
+    util.validate_log(log_data, metric_fields)
     print('Log format validation passed!\n')
+
+    # Fill in regime number and sort
+    log_data = util.fill_regime_num(log_data)
+    log_data = log_data.sort_values(by=['regime_num', 'exp_num']).set_index("regime_num", drop=False)
 
     # Print log summary
     _, log_summary = util.parse_blocks(log_data)
