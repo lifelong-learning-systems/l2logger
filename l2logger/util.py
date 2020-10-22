@@ -87,8 +87,8 @@ def read_log_data(input_dir, analysis_variables=None):
         for file in files:
             if file == 'data-log.tsv':
                 if analysis_variables is not None:
-                    default_cols = [
-                        'block_num', 'exp_num', 'block_type', 'task_name', 'task_params', 'exp_status']
+                    default_cols = ['block_num', 'exp_num', 'block_type', 'worker_id',
+                                    'task_name', 'task_params', 'exp_status', 'timestamp']
                     df = pd.read_csv(os.path.join(root, file), sep='\t')[
                         default_cols + analysis_variables]
                 else:
@@ -196,8 +196,8 @@ def validate_log(data, metric_fields):
     block_types = ['train', 'test']
     exp_statuses = ['complete', 'incomplete']
     worker_pattern = re.compile(r'[0-9a-zA-Z_\-.]+')
-    standard_fields = ['block_num', 'exp_num', 'worker_id', 'block_type', 'task_name',
-                       'task_params', 'exp_status', 'timestamp']
+    standard_fields = ['block_num', 'exp_num', 'block_type',
+                       'worker_id', 'task_name', 'task_params', 'exp_status', 'timestamp']
 
     # Validate columns
     if not set(data.columns).issuperset(standard_fields):
