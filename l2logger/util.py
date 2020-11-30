@@ -180,13 +180,30 @@ def parse_blocks(data):
 
 
 def read_logger_info(input_dir):
-    # This function reads the column info JSON file in the input directory returns the contents
+    # This function reads the logger info JSON file in the input directory and returns the contents
 
     fully_qualified_dir = get_fully_qualified_name(input_dir)
 
     with open(fully_qualified_dir + '/logger_info.json') as json_file:
         logger_info = json.load(json_file)
         return logger_info['metrics_columns']
+
+
+def validate_scenario_info(input_dir):
+    # This function reads the scenario info JSON file in the input directory and validates the contents
+
+    fully_qualified_dir = get_fully_qualified_name(input_dir)
+
+    with open(fully_qualified_dir + '/scenario_info.json') as json_file:
+        scenario_info = json.load(json_file)
+        
+        if 'complexity' in scenario_info.keys():
+            if scenario_info['complexity'] not in ['1-low', '2-intermediate', '3-high']:
+                raise RuntimeError(f"Invalid value for scenario complexity: {scenario_info['complexity']}")
+        
+        if 'difficulty' in scenario_info.keys():
+            if scenario_info['difficulty'] not in ['1-easy', '2-medium', '3-hard']:
+                raise RuntimeError(f"Invalid value for scenario difficulty: {scenario_info['difficulty']}")
 
 
 def validate_log(data, metric_fields):

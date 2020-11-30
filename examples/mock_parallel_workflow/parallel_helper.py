@@ -85,9 +85,12 @@ class LoggerInfo:
         else:
             print(f'Using existing logging directory: {logs_base}')
         # log root in current directory
-        syllabus_info = {
+        scenario_info = {
             'author': 'JHU APL',
+            'complexity': '1-low',
+            'difficulty': '2-medium',
             'script': __file__
         }
-        cols = {'metrics_columns': ['reward']}
-        return l2logger.DataLogger(logs_base, self._scenario_dirname, cols, syllabus_info)
+        logger_info = {'metrics_columns': ['reward'],
+                       'log_format_version': '1.0'}
+        return l2logger.DataLogger(logs_base, self._scenario_dirname, logger_info, scenario_info)

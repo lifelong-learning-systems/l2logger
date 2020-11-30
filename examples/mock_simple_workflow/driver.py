@@ -8,10 +8,13 @@ from mock_agent import MockAgent, SequenceNums
 
 SCENARIO_DIR='simple'
 SCENARIO_INFO = {
-    'author': 'JHU APL'
+    'author': 'JHU APL',
+    'complexity': '1-low',
+    'difficulty': '2-medium'
 }
-COLUMN_INFO = {
-    'metrics_columns': ['reward']
+LOGGER_INFO = {
+    'metrics_columns': ['reward'],
+    'log_format_version': '1.0'
 }
 
 def log_data(data_logger, exp, results, status='complete'):
@@ -50,5 +53,5 @@ if __name__ == "__main__":
     agent = MockAgent(data['scenario']) 
     SCENARIO_INFO['input_file'] = data
     data_logger = l2logger.DataLogger(
-        data['logging_base_dir'], SCENARIO_DIR, COLUMN_INFO, SCENARIO_INFO)
+        data['logging_base_dir'], SCENARIO_DIR, LOGGER_INFO, SCENARIO_INFO)
     run_scenario(agent, data_logger)
