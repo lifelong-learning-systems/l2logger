@@ -2,7 +2,12 @@
 
 All notable changes to this repository are documented here. We are using [Semantic Versioning for Documents](https://semverdoc.org/), in which a version number has the format `major.minor.patch`.
 
+## 1.0.1 - 2020-11-30
+
+- Added complexity and difficulty to scenario information
+
 ## 1.0.0 - 2020-10-21
+
 - Updated API, largely centered around simplification
 - Only requires a single logging function now (log_record) rather than the
   previous two (write_new_regime and write_to_data_log)
@@ -11,5 +16,6 @@ All notable changes to this repository are documented here. We are using [Semant
 - Added more ongoing validation during the logging process
 
 ## 0.1.0 - 2020-09-23
+
 - Initial release
 - See [README.md](./README.md) for documentation, examples, and unit tests

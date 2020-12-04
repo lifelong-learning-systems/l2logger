@@ -1,5 +1,7 @@
 {
   "author": "JHU APL",
+  "complexity": "1-low",
+  "difficulty": "2-medium",
   "input_file": {
     "logging_base_dir": "logs_simple",
     "scenario": [

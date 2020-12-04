@@ -1,9 +1,11 @@
-import os
-import unittest
-import tempfile
 import importlib
 import json
+import os
+import tempfile
+import unittest
+
 from l2logger import l2logger
+
 
 class TestSimpleScenarios(unittest.TestCase):
     def testErrorInit(self):

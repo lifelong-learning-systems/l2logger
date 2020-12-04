@@ -39,6 +39,9 @@ def run():
     # Get metric fields
     metric_fields = util.read_logger_info(args.log_dir)
 
+    # Validate scenario info
+    util.validate_scenario_info(args.log_dir)
+
     # Validate log format
     util.validate_log(log_data, metric_fields)
     print('Log format validation passed!\n')
