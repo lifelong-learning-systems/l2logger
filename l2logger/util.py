@@ -18,11 +18,11 @@
 
 import glob
 import json
-import logging
 import os
 import platform
 import re
 import sys
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -39,7 +39,7 @@ def get_l2data_root(warn=True):
                 "all data is, or will be, stored. For example, consider the following commands:\n" \
                 "\t(bash) export L2DATA=/path/to/data/l2data\n" \
                 "\t(Windows) set L2DATA=C:\\\\path\\\\to\\\\data\\\\l2data\n"
-            logging.warning(msg)
+            warnings.warn(msg)
         root_dir = 'l2data'
         if platform.system().lower() == 'windows':
             root_dir = os.path.join(os.environ['APPDATA'], root_dir)
@@ -174,7 +174,7 @@ def parse_blocks(data):
 
     # Quick check to make sure the regime numbers (zero indexed) aren't a mismatch on the length of the regime nums array
     if (max(all_regime_nums)+1)/len(all_regime_nums) != 1:
-        Warning(f"Block number: {max(all_regime_nums)} and length {len(all_regime_nums)} mismatch!")
+        warnings.warn(f"Block number: {max(all_regime_nums)} and length {len(all_regime_nums)} mismatch!")
 
     return test_task_nums, blocks_df
 
@@ -193,17 +193,22 @@ def validate_scenario_info(input_dir):
     # This function reads the scenario info JSON file in the input directory and validates the contents
 
     fully_qualified_dir = get_fully_qualified_name(input_dir)
+    scenario_dir = os.path.basename(os.path.normpath(fully_qualified_dir))
 
     with open(fully_qualified_dir + '/scenario_info.json') as json_file:
         scenario_info = json.load(json_file)
         
         if 'complexity' in scenario_info.keys():
             if scenario_info['complexity'] not in ['1-low', '2-intermediate', '3-high']:
-                raise RuntimeError(f"Invalid value for scenario complexity: {scenario_info['complexity']}")
-        
+                raise RuntimeError(f"Invalid complexity for {scenario_dir}: {scenario_info['complexity']}")
+        else:
+            warnings.warn(f"Complexity not defined in scenario: {scenario_dir}")
+
         if 'difficulty' in scenario_info.keys():
             if scenario_info['difficulty'] not in ['1-easy', '2-medium', '3-hard']:
-                raise RuntimeError(f"Invalid value for scenario difficulty: {scenario_info['difficulty']}")
+                raise RuntimeError(f"Invalid difficulty for {scenario_dir}: {scenario_info['difficulty']}")
+        else:
+            warnings.warn(f"Difficulty not defined in scenario: {scenario_dir}")
 
 
 def validate_log(data, metric_fields):

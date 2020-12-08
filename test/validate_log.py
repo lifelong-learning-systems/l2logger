@@ -44,7 +44,7 @@ def run():
 
     # Validate log format
     util.validate_log(log_data, metric_fields)
-    print('Log format validation passed!\n')
+    print('\nLog format validation passed!\n')
 
     # Fill in regime number and sort
     log_data = util.fill_regime_num(log_data)
@@ -52,6 +52,8 @@ def run():
 
     # Print log summary
     _, log_summary = util.parse_blocks(log_data)
+    log_summary['task_params'] = log_summary['task_params'].apply(lambda x: x[:25] + '...' if len(x) > 25 else x)
+
     print('Log summary:')
     print(tabulate(log_summary, headers='keys', tablefmt='psql'))
 
