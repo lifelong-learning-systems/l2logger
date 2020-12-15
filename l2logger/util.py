@@ -23,12 +23,13 @@ import platform
 import re
 import sys
 import warnings
+from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
 
 
-def get_l2data_root(warn=True):
+def get_l2data_root(warn: bool = True) -> str:
     """Get the root directory where L2 data and logs are saved"""
     try:
         root_dir = os.environ['L2DATA']
@@ -52,7 +53,7 @@ def get_l2data_root(warn=True):
     return root_dir
 
 
-def get_l2root_base_dirs(directory_to_append, sub_to_get=None):
+def get_l2root_base_dirs(directory_to_append: str, sub_to_get: str = None) -> str:
     # This function uses a utility function to get the base $L2DATA path and goes one level down
     # with the option to return the path string for the directory or the file underneath:
     # e.g. $L2DATA/logs/some_log_directory
@@ -66,7 +67,7 @@ def get_l2root_base_dirs(directory_to_append, sub_to_get=None):
     return file_info_to_return
 
 
-def get_fully_qualified_name(log_dir):
+def get_fully_qualified_name(log_dir: str) -> str:
     if os.path.dirname(log_dir) == '':
         return get_l2root_base_dirs('logs', log_dir)
     else:
@@ -76,7 +77,7 @@ def get_fully_qualified_name(log_dir):
             raise NotADirectoryError
 
 
-def read_log_data(input_dir, analysis_variables=None):
+def read_log_data(input_dir: str, analysis_variables: List[str] = None) -> pd.DataFrame:
     # This function scrapes the TSV files containing syllabus metadata and system performance log data and returns a
     # pandas dataframe with the merged data
     logs = None
@@ -102,7 +103,7 @@ def read_log_data(input_dir, analysis_variables=None):
     return logs
 
 
-def fill_regime_num(data):
+def fill_regime_num(data: pd.DataFrame) -> pd.DataFrame:
     # Initialize regime number column
     data['regime_num'] = np.full_like(data['block_num'], 0, dtype=np.int)
     
@@ -125,7 +126,7 @@ def fill_regime_num(data):
     return data
 
 
-def parse_blocks(data):
+def parse_blocks(data: pd.DataFrame) -> Tuple[List[int], pd.DataFrame]:
     # Want to get the unique blocks, split out training/testing info, and return the split info
     block_list = []
     test_task_nums = []
@@ -179,8 +180,9 @@ def parse_blocks(data):
     return test_task_nums, blocks_df
 
 
-def read_logger_info(input_dir):
-    # This function reads the logger info JSON file in the input directory and returns the contents
+def read_logger_info(input_dir: str) -> List[str]:
+    # This function reads the logger info JSON file in the input directory and returns the list of
+    # metrics columns that can be used for computing LL metrics
 
     fully_qualified_dir = get_fully_qualified_name(input_dir)
 
@@ -189,7 +191,7 @@ def read_logger_info(input_dir):
         return logger_info['metrics_columns']
 
 
-def validate_scenario_info(input_dir):
+def validate_scenario_info(input_dir: str) -> None:
     # This function reads the scenario info JSON file in the input directory and validates the contents
 
     fully_qualified_dir = get_fully_qualified_name(input_dir)
@@ -211,7 +213,7 @@ def validate_scenario_info(input_dir):
             warnings.warn(f"Difficulty not defined in scenario: {scenario_dir}")
 
 
-def validate_log(data, metric_fields):
+def validate_log(data: pd.DataFrame, metric_fields: List[str]) -> None:
     # Initialize values
     last_block_num = None
     last_exp_num = None
