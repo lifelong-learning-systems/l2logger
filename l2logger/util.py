@@ -16,13 +16,12 @@
 # DAMAGES ARISING FROM THE USE OF, OR INABILITY TO USE, THE MATERIAL, INCLUDING,
 # BUT NOT LIMITED TO, ANY DAMAGES FOR LOST PROFITS.
 
-import glob
 import json
 import os
 import platform
 import re
-import sys
 import warnings
+from pathlib import Path
 from typing import List, Tuple
 
 import numpy as np
@@ -184,9 +183,9 @@ def read_logger_info(input_dir: str) -> List[str]:
     # This function reads the logger info JSON file in the input directory and returns the list of
     # metrics columns that can be used for computing LL metrics
 
-    fully_qualified_dir = get_fully_qualified_name(input_dir)
+    fully_qualified_dir = Path(get_fully_qualified_name(input_dir))
 
-    with open(fully_qualified_dir + '/logger_info.json') as json_file:
+    with open(fully_qualified_dir / 'logger_info.json') as json_file:
         logger_info = json.load(json_file)
         return logger_info['metrics_columns']
 
@@ -194,10 +193,10 @@ def read_logger_info(input_dir: str) -> List[str]:
 def validate_scenario_info(input_dir: str) -> None:
     # This function reads the scenario info JSON file in the input directory and validates the contents
 
-    fully_qualified_dir = get_fully_qualified_name(input_dir)
-    scenario_dir = os.path.basename(os.path.normpath(fully_qualified_dir))
+    fully_qualified_dir = Path(get_fully_qualified_name(input_dir))
+    scenario_dir = fully_qualified_dir.name
 
-    with open(fully_qualified_dir + '/scenario_info.json') as json_file:
+    with open(fully_qualified_dir / 'scenario_info.json') as json_file:
         scenario_info = json.load(json_file)
         
         if 'complexity' in scenario_info.keys():

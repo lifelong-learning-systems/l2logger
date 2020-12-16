@@ -18,6 +18,7 @@
 
 import argparse
 import traceback
+from pathlib import Path
 
 from l2logger import util
 from tabulate import tabulate
@@ -32,15 +33,16 @@ def run():
 
     # Parse arguments
     args = parser.parse_args()
+    log_dir = Path(args.log_dir)
 
     # Attempt to read log data
-    log_data = util.read_log_data(args.log_dir)
+    log_data = util.read_log_data(log_dir)
 
     # Get metric fields
-    metric_fields = util.read_logger_info(args.log_dir)
+    metric_fields = util.read_logger_info(log_dir)
 
     # Validate scenario info
-    util.validate_scenario_info(args.log_dir)
+    util.validate_scenario_info(log_dir)
 
     # Validate log format
     util.validate_log(log_data, metric_fields)
