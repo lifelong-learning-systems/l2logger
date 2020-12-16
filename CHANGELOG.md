@@ -2,6 +2,14 @@
 
 All notable changes to this repository are documented here. We are using [Semantic Versioning for Documents](https://semverdoc.org/), in which a version number has the format `major.minor.patch`.
 
+## 1.0.2 - 2020-12-15
+
+- Added warnings in scenario info validation
+- Truncated task parameters in summary table of log validation
+- Added type hints
+- Used pathlib to handle file paths
+- Cleaned up imports
+
 ## 1.0.1 - 2020-11-30
 
 - Added complexity and difficulty to scenario information
