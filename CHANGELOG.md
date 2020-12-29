@@ -2,6 +2,11 @@
 
 All notable changes to this repository are documented here. We are using [Semantic Versioning for Documents](https://semverdoc.org/), in which a version number has the format `major.minor.patch`.
 
+
+## 1.0.3 - 2020-12-29'
+
+- Fixed typo in L2Logger init filename
+
 ## 1.0.2 - 2020-12-15
 
 - Added warnings in scenario info validation
