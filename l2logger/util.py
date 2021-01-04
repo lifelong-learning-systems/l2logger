@@ -83,6 +83,9 @@ def read_log_data(input_dir: str, analysis_variables: List[str] = None) -> pd.Da
 
     fully_qualified_dir = get_fully_qualified_name(input_dir)
 
+    if not os.path.isdir(fully_qualified_dir):
+        raise FileNotFoundError(f"Log directory not found!")
+
     for root, _, files in os.walk(fully_qualified_dir):
         for file in files:
             if file == 'data-log.tsv':
@@ -185,6 +188,9 @@ def read_logger_info(input_dir: str) -> List[str]:
 
     fully_qualified_dir = Path(get_fully_qualified_name(input_dir))
 
+    if not (fully_qualified_dir / 'logger_info.json').exists():
+        raise FileNotFoundError(f"Logger info file not found!")
+
     with open(fully_qualified_dir / 'logger_info.json') as json_file:
         logger_info = json.load(json_file)
         return logger_info['metrics_columns']
@@ -195,6 +201,9 @@ def validate_scenario_info(input_dir: str) -> None:
 
     fully_qualified_dir = Path(get_fully_qualified_name(input_dir))
     scenario_dir = fully_qualified_dir.name
+
+    if not (fully_qualified_dir / 'scenario_info.json').exists():
+        raise FileNotFoundError(f"Scenario info file not found!")
 
     with open(fully_qualified_dir / 'scenario_info.json') as json_file:
         scenario_info = json.load(json_file)

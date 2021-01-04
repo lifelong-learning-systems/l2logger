@@ -2,6 +2,9 @@
 
 All notable changes to this repository are documented here. We are using [Semantic Versioning for Documents](https://semverdoc.org/), in which a version number has the format `major.minor.patch`.
 
+## 1.0.4 - 2021-01-04'
+
+- Added directory and path validation when reading log data
 
 ## 1.0.3 - 2020-12-29'
 
