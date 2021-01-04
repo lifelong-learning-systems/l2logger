@@ -6,6 +6,7 @@ All notable changes to this repository are documented here. We are using [Semant
 
 - Added directory and path validation when reading log data
 - Added docstrings for utility functions
+- Specified minimum pandas version
 
 ## 1.0.3 - 2020-12-29'
 
