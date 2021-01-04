@@ -29,7 +29,15 @@ import pandas as pd
 
 
 def get_l2data_root(warn: bool = True) -> str:
-    """Get the root directory where L2 data and logs are saved"""
+    """Get the root directory where L2 data and logs are saved.
+
+    Args:
+        warn (bool, optional): Flag for enabling/disabling warning message. Defaults to True.
+
+    Returns:
+        str: The L2Data root directory path.
+    """
+
     try:
         root_dir = os.environ['L2DATA']
     except KeyError:
@@ -53,10 +61,19 @@ def get_l2data_root(warn: bool = True) -> str:
 
 
 def get_l2root_base_dirs(directory_to_append: str, sub_to_get: str = None) -> str:
-    # This function uses a utility function to get the base $L2DATA path and goes one level down
-    # with the option to return the path string for the directory or the file underneath:
-    # e.g. $L2DATA/logs/some_log_directory
-    # or   $L2DATA/taskinfo/info.json
+    """Get the base L2DATA path and go one level down with the option to return the path string for
+    the directory or the file underneath.
+
+    e.g. $L2DATA/logs/some_log_directory or $L2DATA/taskinfo/info.json
+
+    Args:
+        directory_to_append (str): The L2Data subdirectory.
+        sub_to_get (str, optional): The further subdirectory or file to append. Defaults to None.
+
+    Returns:
+        str: The path of the L2Data subdirectory or file.
+    """
+
     file_info_to_return = os.path.join(get_l2data_root(), directory_to_append)
 
     if sub_to_get:
@@ -67,6 +84,21 @@ def get_l2root_base_dirs(directory_to_append: str, sub_to_get: str = None) -> st
 
 
 def get_fully_qualified_name(log_dir: str) -> str:
+    """Get fully qualified path of log directory.
+
+    Checks if the log directory exists in L2Data/logs first. If not, then this function will check
+    the current working directory.
+
+    Args:
+        log_dir (str): The log directory name.
+
+    Raises:
+        NotADirectoryError: If the directory is not found.
+
+    Returns:
+        str: The full path to the log directory.
+    """
+
     if os.path.dirname(log_dir) == '':
         return get_l2root_base_dirs('logs', log_dir)
     else:
@@ -77,8 +109,19 @@ def get_fully_qualified_name(log_dir: str) -> str:
 
 
 def read_log_data(input_dir: str, analysis_variables: List[str] = None) -> pd.DataFrame:
-    # This function scrapes the TSV files containing syllabus metadata and system performance log data and returns a
-    # pandas dataframe with the merged data
+    """Parse input directory for data log files and aggregate into Pandas DataFrame.
+
+    Args:
+        input_dir (str): The top-level log directory.
+        analysis_variables (List[str], optional): Filtered column names to import. Defaults to None.
+
+    Raises:
+        FileNotFoundError: If log directory is not found.
+
+    Returns:
+        pd.DataFrame: The aggregated log data.
+    """
+
     logs = None
 
     fully_qualified_dir = get_fully_qualified_name(input_dir)
@@ -106,6 +149,15 @@ def read_log_data(input_dir: str, analysis_variables: List[str] = None) -> pd.Da
 
 
 def fill_regime_num(data: pd.DataFrame) -> pd.DataFrame:
+    """Add regime number information to the log data based on block and task parameters.
+
+    Args:
+        data (pd.DataFrame): Log data.
+
+    Returns:
+        pd.DataFrame: The log data with regime numbers filled in.
+    """
+
     # Initialize regime number column
     data['regime_num'] = np.full_like(data['block_num'], 0, dtype=np.int)
     
@@ -129,6 +181,19 @@ def fill_regime_num(data: pd.DataFrame) -> pd.DataFrame:
 
 
 def parse_blocks(data: pd.DataFrame) -> Tuple[List[int], pd.DataFrame]:
+    """Parse full DataFrame and create summary DataFrame of high-level block information.
+
+    Args:
+        data (pd.DataFrame): Log data.
+
+    Raises:
+        Exception: If unsupported block type is encountered.
+        Exception: If parameter set is invalid.
+
+    Returns:
+        Tuple[List[int], pd.DataFrame]: List of test regime numbers and block info DataFrame.
+    """
+
     # Want to get the unique blocks, split out training/testing info, and return the split info
     block_list = []
     test_task_nums = []
@@ -183,6 +248,19 @@ def parse_blocks(data: pd.DataFrame) -> Tuple[List[int], pd.DataFrame]:
 
 
 def read_logger_info(input_dir: str) -> List[str]:
+    """Parse logger info file for valid metric columns.
+
+    Args:
+        input_dir (str): The top-level log directory.
+
+    Raises:
+        FileNotFoundError: If logger info file is not found.
+
+    Returns:
+        List[str]: The application-specific metrics columns that the metrics framework can compute
+            metrics on.
+    """
+
     # This function reads the logger info JSON file in the input directory and returns the list of
     # metrics columns that can be used for computing LL metrics
 
@@ -197,6 +275,17 @@ def read_logger_info(input_dir: str) -> List[str]:
 
 
 def validate_scenario_info(input_dir: str) -> None:
+    """Validate scenario information file with complexity and difficulty.
+
+    Args:
+        input_dir (str): The top-level log directory.
+
+    Raises:
+        FileNotFoundError: If scenario info file is not found.
+        RuntimeError: If invalid scenario complexity specified.
+        RuntimeError: If invalid scenario difficulty specified.
+    """
+
     # This function reads the scenario info JSON file in the input directory and validates the contents
 
     fully_qualified_dir = Path(get_fully_qualified_name(input_dir))
@@ -222,6 +311,25 @@ def validate_scenario_info(input_dir: str) -> None:
 
 
 def validate_log(data: pd.DataFrame, metric_fields: List[str]) -> None:
+    """Validate log data format.
+
+    Args:
+        data (pd.DataFrame): Log data.
+        metric_fields (List[str]): The application-specific metrics columns defined in logger info.
+
+    Raises:
+        RuntimeError: If the standard columns are missing.
+        RuntimeError: If the data does not contain the specified metrics columns.
+        RuntimeError: If the block number is negative or non-integer.
+        RuntimeError: If the block number is decreasing.
+        RuntimeError: If experience number is negative or non-integer.
+        RuntimeError: If experience number is decreasing.
+        RuntimeError: If block type is invalid.
+        RuntimeError: If experience status is invalid.
+        RuntimeError: If worker ID is invalid.
+        RuntimeError: If task parameters is an invalid JSON.
+    """
+
     # Initialize values
     last_block_num = None
     last_exp_num = None

@@ -5,6 +5,7 @@ All notable changes to this repository are documented here. We are using [Semant
 ## 1.0.4 - 2021-01-04'
 
 - Added directory and path validation when reading log data
+- Added docstrings for utility functions
 
 ## 1.0.3 - 2020-12-29'
 
