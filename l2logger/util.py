@@ -145,6 +145,7 @@ def read_log_data(input_dir: str, analysis_variables: List[str] = None) -> pd.Da
                     logs = pd.concat([logs, df])
 
     logs = logs.sort_values('exp_num', ignore_index=True)
+    logs['task_name'] = np.char.lower(list(logs['task_name']))
     return logs
 
 
