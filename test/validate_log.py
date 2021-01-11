@@ -54,7 +54,10 @@ def run():
 
     # Print log summary
     _, log_summary = util.parse_blocks(log_data)
-    log_summary['task_params'] = log_summary['task_params'].apply(lambda x: x[:25] + '...' if len(x) > 25 else x)
+    if log_summary['task_params'].dropna().size:
+        log_summary['task_params'] = log_summary['task_params'].apply(lambda x: x[:25] + '...' if len(x) > 25 else x)
+    else:
+        log_summary = log_summary.dropna(axis=1)
 
     print('Log summary:')
     print(tabulate(log_summary, headers='keys', tablefmt='psql'))
