@@ -99,7 +99,7 @@ def get_fully_qualified_name(log_dir: str) -> str:
         str: The full path to the log directory.
     """
 
-    if os.path.dirname(log_dir) == '':
+    if os.path.dirname(log_dir.strip('/\\')) == '':
         return get_l2root_base_dirs('logs', log_dir)
     else:
         if os.path.isdir(log_dir):
