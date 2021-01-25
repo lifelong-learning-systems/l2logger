@@ -2,6 +2,10 @@
 
 All notable changes to this repository are documented here. We are using [Semantic Versioning for Documents](https://semverdoc.org/), in which a version number has the format `major.minor.patch`.
 
+## 1.0.5 - 2021-01-25
+
+- Added handling for forward/backward slashes in log directory command-line argument
+
 ## 1.0.4 - 2021-01-11
 
 - Added directory and path validation when reading log data
