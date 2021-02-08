@@ -2,6 +2,11 @@
 
 All notable changes to this repository are documented here. We are using [Semantic Versioning for Documents](https://semverdoc.org/), in which a version number has the format `major.minor.patch`.
 
+## 1.0.6 - 2021-01-25
+
+- Fixed bug with performing string operations on Path object in log validation script
+- Sorted log data by block number in addition to experience number to handle false  log invalidation due to distributed systems
+
 ## 1.0.5 - 2021-01-25
 
 - Added handling for forward/backward slashes in log directory command-line argument
