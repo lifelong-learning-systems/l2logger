@@ -342,11 +342,11 @@ def validate_log(data: pd.DataFrame, metric_fields: List[str]) -> None:
 
     # Validate columns
     if not set(data.columns).issuperset(standard_fields):
-        raise RuntimeError(f'standard fields missing: expected at least ' \
-                        f'{standard_fields}, got {set(data.columns)}')
+        raise RuntimeError(f'standard fields missing: expected at least '
+                           f'{standard_fields}, got {set(data.columns)}')
     if not set(data.columns).issuperset(metric_fields):
-                raise RuntimeError(f'metric record fields missing: expected at least ' \
-                                f'{metric_fields}, got {set(data.columns)}')
+        raise RuntimeError(f'metric record fields missing: expected at least '
+                           f'{metric_fields}, got {set(data.columns)}')
 
     # Iterate over all rows of log data
     for index, row in data.iterrows():
