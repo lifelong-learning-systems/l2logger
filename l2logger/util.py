@@ -164,14 +164,18 @@ def fill_regime_num(data: pd.DataFrame) -> pd.DataFrame:
     
     # Initialize variables
     regime_num = -1
+    prev_block_num = -1
     prev_block_type = ''
     prev_task_name = ''
     prev_task_params = ''
 
-    # Determine regime changes by looking at block type, task name, and parameter combinations
+    # Determine regime changes by looking at block num, block type, task name, and parameter combinations
     for index, row in data.iterrows():
-        if row['block_type'] != prev_block_type or row['task_name'] != prev_task_name or (isinstance(row['task_params'], str) and row['task_params'] != prev_task_params):
+        if row['block_num'] != prev_block_num or row['block_type'] != prev_block_type or \
+                row['task_name'] != prev_task_name or (isinstance(row['task_params'], str) and
+                                                       row['task_params'] != prev_task_params):
             regime_num = regime_num + 1
+            prev_block_num = row['block_num']
             prev_block_type = row['block_type']
             prev_task_name = row['task_name']
             prev_task_params = row['task_params']
