@@ -2,6 +2,11 @@
 
 All notable changes to this repository are documented here. We are using [Semantic Versioning for Documents](https://semverdoc.org/), in which a version number has the format `major.minor.patch`.
 
+## 1.0.7 - 2021-03-01
+
+- Added block number change as additional signal for regime change
+- Added log validation script as package module
+
 ## 1.0.6 - 2021-02-08
 
 - Fixed bug with performing string operations on Path object in log validation script

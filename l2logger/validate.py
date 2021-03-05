@@ -18,7 +18,6 @@
 
 import argparse
 import traceback
-from pathlib import Path
 
 from l2logger import util
 from tabulate import tabulate
