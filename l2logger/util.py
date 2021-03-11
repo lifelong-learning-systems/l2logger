@@ -22,7 +22,7 @@ import platform
 import re
 import warnings
 from pathlib import Path
-from typing import List, Tuple
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -163,12 +163,11 @@ def fill_regime_num(data: pd.DataFrame) -> pd.DataFrame:
 
     # Get indices where a regime change has occurred
     changes = (block_nums[:-1] != block_nums[1:]) + (block_types[:-1] != block_types[1:]) + \
-        (task_names[:-1] != task_names[1:]) + \
-        (task_params[:-1] != task_params[1:])
+        (task_names[:-1] != task_names[1:]) + (task_params[:-1] != task_params[1:])
 
     # Number the regime changes
     regimes = [np.count_nonzero(changes[:i]) for i, _ in enumerate(changes)]
-    regimes.append(regimes[-1] + 1)
+    regimes.append(regimes[-1] + 1 if changes[-1] else regimes[-1])
 
     # Set regime numbers in data
     data['regime_num'] = regimes
@@ -176,71 +175,24 @@ def fill_regime_num(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-def parse_blocks(data: pd.DataFrame) -> Tuple[List[int], pd.DataFrame]:
+def parse_blocks(data: pd.DataFrame) -> pd.DataFrame:
     """Parse full DataFrame and create summary DataFrame of high-level block information.
 
     Args:
         data (pd.DataFrame): Log data.
 
-    Raises:
-        Exception: If unsupported block type is encountered.
-        Exception: If parameter set is invalid.
-
     Returns:
-        Tuple[List[int], pd.DataFrame]: List of test regime numbers and block info DataFrame.
+        pd.DataFrame: Block info DataFrame.
     """
 
-    # Want to get the unique blocks, split out training/testing info, and return the split info
-    block_list = []
-    test_task_nums = []
-    all_regime_nums = []
-
-    blocks_from_logs = data.loc[:, ['block_num', 'block_type']].drop_duplicates()
-
-    for _, block in blocks_from_logs.iterrows():
-        block_num = block['block_num']
-        block_type = block['block_type']
-
-        if str.lower(block_type) not in ["train", "test"]:
-            raise Exception(f'Unsupported block type: {block_type}! Supported block types are "train" and "test"')
-
-        # Now must account for the multiple tasks, parameters
-        d1 = data[(data["block_num"] == block_num) & (data["block_type"] == block_type)]
-        regimes_within_blocks = d1.loc[:, 'regime_num'].unique()
-        param_set = d1.loc[:, 'task_params'].unique()
-
-        # Save the regime_num numbers involved in testing for subsequent metrics
-        if block_type == 'test':
-            test_task_nums.extend(regimes_within_blocks)
-
-        for regime_num in regimes_within_blocks:
-            all_regime_nums.append(regime_num)
-            d2 = d1[d1['regime_num'] == regime_num]
-            task_name = d2.loc[:, 'task_name'].unique()[0]
-
-            block_info = {'block_num': block_num, 'block_type': block_type, 'task_name': task_name,
-                          'regime_num': regime_num}
-
-            if len(param_set) > 1:
-                # There is parameter variation exercised in the syllabus and we need to record it
-                task_specific_param_set = d2.loc[:, 'task_params'].unique()[0]
-                block_info['task_params'] = task_specific_param_set
-            elif len(param_set) == 1:
-                # Every task in this block has the same parameter set
-                block_info['task_params'] = param_set[0]
-            else:
-                raise Exception(f"Error parsing the parameter set for this task: {param_set}")
-
-            block_list.append(block_info)
-
-    # Convenient for future dev to have the block id be the same as the index of the dataframe
-    blocks_df = pd.DataFrame(block_list).sort_values(by=['regime_num']).set_index("regime_num", drop=False)
+    blocks_df = data.loc[:, ['regime_num', 'block_num', 'block_type', 'task_name', 'task_params']].drop_duplicates()
 
     # Quick check to make sure the regime numbers (zero indexed) aren't a mismatch on the length of the regime nums array
-    if (max(all_regime_nums)+1)/len(all_regime_nums) != 1:
-        warnings.warn(f"Block number: {max(all_regime_nums)} and length {len(all_regime_nums)} mismatch!")
+    num_regimes = max(data['regime_num'].values) + 1
+    if num_regimes != blocks_df.shape[0]:
+        warnings.warn(f"Number of regimes: {num_regimes} and parsed blocks {blocks_df.shape[0]} mismatch!")
 
-    return test_task_nums, blocks_df
+    return blocks_df
 
 
 def read_logger_info(input_dir: str) -> List[str]:

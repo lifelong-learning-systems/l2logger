@@ -51,14 +51,14 @@ def run():
     log_data = log_data.sort_values(by=['regime_num', 'exp_num']).set_index("regime_num", drop=False)
 
     # Print log summary
-    _, log_summary = util.parse_blocks(log_data)
+    log_summary = util.parse_blocks(log_data)
     if log_summary['task_params'].dropna().size:
         log_summary['task_params'] = log_summary['task_params'].apply(lambda x: x[:25] + '...' if len(x) > 25 else x)
     else:
         log_summary = log_summary.dropna(axis=1)
 
     print('Log summary:')
-    print(tabulate(log_summary, headers='keys', tablefmt='psql'))
+    print(tabulate(log_summary.drop(columns='regime_num'), headers='keys', tablefmt='psql'))
 
 
 if __name__ == '__main__':
