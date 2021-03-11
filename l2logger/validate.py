@@ -28,7 +28,7 @@ def run():
     parser = argparse.ArgumentParser(description='Validate log format from the command line')
 
     # Log directories can be absolute paths, relative paths, or paths found in $L2DATA/logs
-    parser.add_argument('-l', '--log-dir', required=True, help='Log directory of scenario')
+    parser.add_argument('log_dir', type=str, help='Log directory of scenario')
 
     # Parse arguments
     args = parser.parse_args()
