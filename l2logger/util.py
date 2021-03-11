@@ -124,25 +124,22 @@ def read_log_data(input_dir: str, analysis_variables: List[str] = None) -> pd.Da
 
     logs = None
 
-    fully_qualified_dir = get_fully_qualified_name(input_dir)
+    fully_qualified_dir = Path(get_fully_qualified_name(input_dir))
 
-    if not os.path.isdir(fully_qualified_dir):
+    if not fully_qualified_dir.is_dir():
         raise FileNotFoundError(f"Log directory not found!")
 
-    for root, _, files in os.walk(fully_qualified_dir):
-        for file in files:
-            if file == 'data-log.tsv':
-                if analysis_variables is not None:
-                    default_cols = ['block_num', 'exp_num', 'block_type', 'worker_id',
-                                    'task_name', 'task_params', 'exp_status', 'timestamp']
-                    df = pd.read_csv(os.path.join(root, file), sep='\t')[
-                        default_cols + analysis_variables]
-                else:
-                    df = pd.read_csv(os.path.join(root, file), sep='\t')
-                if logs is None:
-                    logs = df
-                else:
-                    logs = pd.concat([logs, df])
+    for data_file in fully_qualified_dir.rglob('data-log.tsv'):
+        if analysis_variables is not None:
+            default_cols = ['block_num', 'exp_num', 'block_type', 'worker_id',
+                            'task_name', 'task_params', 'exp_status', 'timestamp']
+            df = pd.read_csv(data_file, sep='\t')[default_cols + analysis_variables]
+        else:
+            df = pd.read_csv(data_file, sep='\t')
+        if logs is None:
+            logs = df
+        else:
+            logs = pd.concat([logs, df])
 
     logs = logs.sort_values(['exp_num', 'block_num'], ignore_index=True)
     logs['task_name'] = np.char.lower(list(logs['task_name']))
@@ -159,28 +156,22 @@ def fill_regime_num(data: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: The log data with regime numbers filled in.
     """
 
-    # Initialize regime number column
-    data['regime_num'] = np.full_like(data['block_num'], 0, dtype=np.int)
-    
-    # Initialize variables
-    regime_num = -1
-    prev_block_num = -1
-    prev_block_type = ''
-    prev_task_name = ''
-    prev_task_params = ''
+    block_nums = data.block_num.values
+    block_types = data.block_type.values
+    task_names = data.task_name.values
+    task_params = data.task_params.fillna('').values
 
-    # Determine regime changes by looking at block num, block type, task name, and parameter combinations
-    for index, row in data.iterrows():
-        if row['block_num'] != prev_block_num or row['block_type'] != prev_block_type or \
-                row['task_name'] != prev_task_name or (isinstance(row['task_params'], str) and
-                                                       row['task_params'] != prev_task_params):
-            regime_num = regime_num + 1
-            prev_block_num = row['block_num']
-            prev_block_type = row['block_type']
-            prev_task_name = row['task_name']
-            prev_task_params = row['task_params']
+    # Get indices where a regime change has occurred
+    changes = (block_nums[:-1] != block_nums[1:]) + (block_types[:-1] != block_types[1:]) + \
+        (task_names[:-1] != task_names[1:]) + \
+        (task_params[:-1] != task_params[1:])
 
-        data.at[index, 'regime_num'] = regime_num
+    # Number the regime changes
+    regimes = [np.count_nonzero(changes[:i]) for i, _ in enumerate(changes)]
+    regimes.append(regimes[-1] + 1)
+
+    # Set regime numbers in data
+    data['regime_num'] = regimes
 
     return data
 
@@ -336,10 +327,10 @@ def validate_log(data: pd.DataFrame, metric_fields: List[str]) -> None:
     """
 
     # Initialize values
-    last_block_num = None
-    last_exp_num = None
-    block_types = ['train', 'test']
-    exp_statuses = ['complete', 'incomplete']
+    # last_block_num = None
+    # last_exp_num = None
+    valid_block_types = ['train', 'test']
+    valid_exp_statuses = ['complete', 'incomplete']
     worker_pattern = re.compile(r'[0-9a-zA-Z_\-.]+')
     standard_fields = ['block_num', 'exp_num', 'block_type',
                        'worker_id', 'task_name', 'task_params', 'exp_status', 'timestamp']
@@ -352,34 +343,39 @@ def validate_log(data: pd.DataFrame, metric_fields: List[str]) -> None:
         raise RuntimeError(f'metric record fields missing: expected at least '
                            f'{metric_fields}, got {set(data.columns)}')
 
-    # Iterate over all rows of log data
-    for index, row in data.iterrows():
-        # Validate block number
-        if (not type(row['block_num']) is int) or row['block_num'] < 0:
-            raise RuntimeError(f'block_num must be non-negative integer')
-        elif (not last_block_num is None) and row['block_num'] < last_block_num:
-            raise RuntimeError('block_num must be non-decreasing')
-        last_block_num = row['block_num']
+    block_nums = data.block_num.values
+    exp_nums = data.exp_num.values
+    block_types = data.block_type.values
+    exp_statuses = data.exp_status.values
+    worker_ids = data.worker_id.values
+    task_params = data.task_params.fillna('').values
 
-        # Validate exp number
-        if (not type(row['exp_num']) is int) or row['exp_num'] < 0:
-            raise RuntimeError(f'exp_num must be non-negative integer')
-        elif (not last_exp_num is None) and row['exp_num'] < last_exp_num:
-            raise RuntimeError('exp_num must be non-decreasing')
-        last_exp_num = row['exp_num']
+    # Validate block number
+    if not np.all(block_nums >= 0):
+        raise RuntimeError(f'block_num must be non-negative integer')
+    elif np.any(block_nums[:-1] > block_nums[1:]):
+        raise RuntimeError('block_num must be non-decreasing')
 
-        # Validate block type
-        if not row['block_type'] in block_types:
-            raise RuntimeError(f'block_type must be one of {block_types}')
-    
-        # Validate exp status
-        if not row['exp_status'] in exp_statuses:
-            raise RuntimeError(f'exp_status must be one of {exp_statuses}')
-    
-        if re.fullmatch(worker_pattern, str(row['worker_id'])) is None:
-            raise RuntimeError(f'worker_id can only contain alphanumeric characters, hyphens, dashes, or periods')
+    # Validate exp number
+    if not np.all(exp_nums >= 0):
+        raise RuntimeError(f'exp_num must be non-negative integer')
+    elif np.any(exp_nums[:-1] > exp_nums[1:]):
+        raise RuntimeError('exp_num must be non-decreasing')
 
-        try:
-            json.dumps(row['task_params'])
-        except:
-            raise RuntimeError('task_params must be valid json')
+    # Validate block type
+    if not np.all(np.isin(block_types, valid_block_types)):
+        raise RuntimeError(f'block_type must be one of {block_types}')
+
+    # Validate exp status
+    if not np.all(np.isin(exp_statuses, valid_exp_statuses)):
+        raise RuntimeError(f'exp_status must be one of {exp_statuses}')   
+
+    # Validate worker ID string pattern
+    if None in [re.fullmatch(worker_pattern, str(worker_id)) for worker_id in worker_ids]:
+        raise RuntimeError(f'worker_id can only contain alphanumeric characters, hyphens, dashes, or periods')
+
+    # Validate task parameters is valid JSON
+    try:
+        [json.loads(task_param) for task_param in task_params if task_param != '']
+    except:
+        raise RuntimeError('task_params must be valid json')
