@@ -89,6 +89,7 @@ class LoggerInfo:
             'author': 'JHU APL',
             'complexity': '1-low',
             'difficulty': '2-medium',
+            'scenario_type': 'custom',
             'script': __file__
         }
         logger_info = {'metrics_columns': ['reward'],

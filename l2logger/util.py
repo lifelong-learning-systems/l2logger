@@ -223,7 +223,7 @@ def read_logger_info(input_dir: str) -> List[str]:
 
 
 def validate_scenario_info(input_dir: str) -> None:
-    """Validate scenario information file with complexity and difficulty.
+    """Validate scenario information file with complexity, difficulty, and scenario type.
 
     Args:
         input_dir (str): The top-level log directory.
@@ -232,6 +232,7 @@ def validate_scenario_info(input_dir: str) -> None:
         FileNotFoundError: If scenario info file is not found.
         RuntimeError: If invalid scenario complexity specified.
         RuntimeError: If invalid scenario difficulty specified.
+        RuntimeError: If invalid scenario type specified.
     """
 
     # This function reads the scenario info JSON file in the input directory and validates the contents
@@ -256,6 +257,12 @@ def validate_scenario_info(input_dir: str) -> None:
                 raise RuntimeError(f"Invalid difficulty for {scenario_dir}: {scenario_info['difficulty']}")
         else:
             warnings.warn(f"Difficulty not defined in scenario: {scenario_dir}")
+
+        if 'scenario_type' in scenario_info.keys():
+            if scenario_info['scenario_type'] not in ['permuted', 'alternating', 'custom']:
+                raise RuntimeError(f"Invalid scenario type for {scenario_dir}: {scenario_info['scenario_type']}")
+        else:
+            warnings.warn(f"Scenario type not defined in scenario: {scenario_dir}")
 
 
 def validate_log(data: pd.DataFrame, metric_fields: List[str]) -> None:
