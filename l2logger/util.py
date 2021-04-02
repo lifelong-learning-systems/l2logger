@@ -127,7 +127,7 @@ def read_log_data(input_dir: str, analysis_variables: List[str] = None) -> pd.Da
     fully_qualified_dir = Path(get_fully_qualified_name(input_dir))
 
     if not fully_qualified_dir.is_dir():
-        raise FileNotFoundError(f"Log directory not found!")
+        raise FileNotFoundError(f'Log directory not found!')
 
     for data_file in fully_qualified_dir.rglob('data-log.tsv'):
         if analysis_variables is not None:
@@ -190,7 +190,7 @@ def parse_blocks(data: pd.DataFrame) -> pd.DataFrame:
     # Quick check to make sure the regime numbers (zero indexed) aren't a mismatch on the length of the regime nums array
     num_regimes = max(data['regime_num'].values) + 1
     if num_regimes != blocks_df.shape[0]:
-        warnings.warn(f"Number of regimes: {num_regimes} and parsed blocks {blocks_df.shape[0]} mismatch!")
+        warnings.warn(f'Number of regimes: {num_regimes} and parsed blocks {blocks_df.shape[0]} mismatch!')
 
     return blocks_df
 
@@ -215,7 +215,7 @@ def read_logger_info(input_dir: str) -> List[str]:
     fully_qualified_dir = Path(get_fully_qualified_name(input_dir))
 
     if not (fully_qualified_dir / 'logger_info.json').exists():
-        raise FileNotFoundError(f"Logger info file not found!")
+        raise FileNotFoundError(f'Logger info file not found!')
 
     with open(fully_qualified_dir / 'logger_info.json') as json_file:
         logger_info = json.load(json_file)
@@ -241,7 +241,7 @@ def validate_scenario_info(input_dir: str) -> None:
     scenario_dir = fully_qualified_dir.name
 
     if not (fully_qualified_dir / 'scenario_info.json').exists():
-        raise FileNotFoundError(f"Scenario info file not found!")
+        raise FileNotFoundError(f'Scenario info file not found!')
 
     with open(fully_qualified_dir / 'scenario_info.json') as json_file:
         scenario_info = json.load(json_file)
@@ -250,19 +250,19 @@ def validate_scenario_info(input_dir: str) -> None:
             if scenario_info['complexity'] not in ['1-low', '2-intermediate', '3-high']:
                 raise RuntimeError(f"Invalid complexity for {scenario_dir}: {scenario_info['complexity']}")
         else:
-            warnings.warn(f"Complexity not defined in scenario: {scenario_dir}")
+            warnings.warn(f'Complexity not defined in scenario: {scenario_dir}')
 
         if 'difficulty' in scenario_info.keys():
             if scenario_info['difficulty'] not in ['1-easy', '2-medium', '3-hard']:
                 raise RuntimeError(f"Invalid difficulty for {scenario_dir}: {scenario_info['difficulty']}")
         else:
-            warnings.warn(f"Difficulty not defined in scenario: {scenario_dir}")
+            warnings.warn(f'Difficulty not defined in scenario: {scenario_dir}')
 
         if 'scenario_type' in scenario_info.keys():
             if scenario_info['scenario_type'] not in ['permuted', 'alternating', 'custom']:
                 raise RuntimeError(f"Invalid scenario type for {scenario_dir}: {scenario_info['scenario_type']}")
         else:
-            warnings.warn(f"Scenario type not defined in scenario: {scenario_dir}")
+            warnings.warn(f'Scenario type not defined in scenario: {scenario_dir}')
 
 
 def validate_log(data: pd.DataFrame, metric_fields: List[str]) -> None:
@@ -275,6 +275,7 @@ def validate_log(data: pd.DataFrame, metric_fields: List[str]) -> None:
     Raises:
         RuntimeError: If the standard columns are missing.
         RuntimeError: If the data does not contain the specified metrics columns.
+        RuntimeError: If task names are invalid format.
         RuntimeError: If the block number is negative or non-integer.
         RuntimeError: If the block number is decreasing.
         RuntimeError: If experience number is negative or non-integer.
@@ -286,8 +287,7 @@ def validate_log(data: pd.DataFrame, metric_fields: List[str]) -> None:
     """
 
     # Initialize values
-    # last_block_num = None
-    # last_exp_num = None
+    task_name_pattern = re.compile(r'[0-9a-zA-Z]+_[0-9a-zA-Z]+')
     valid_block_types = ['train', 'test']
     valid_exp_statuses = ['complete', 'incomplete']
     worker_pattern = re.compile(r'[0-9a-zA-Z_\-.]+')
@@ -302,12 +302,18 @@ def validate_log(data: pd.DataFrame, metric_fields: List[str]) -> None:
         raise RuntimeError(f'metric record fields missing: expected at least '
                            f'{metric_fields}, got {set(data.columns)}')
 
+    task_names = np.unique(data.task_name.values)
     block_nums = data.block_num.values
     exp_nums = data.exp_num.values
     block_types = data.block_type.values
     exp_statuses = data.exp_status.values
     worker_ids = data.worker_id.values
     task_params = data.task_params.fillna('').values
+
+    # Validate task naming convention
+    if None in [re.fullmatch(task_name_pattern, str(task_name)) for task_name in task_names]:
+        warnings.warn(f'Task names do not follow expected format: <taskLabel>_<variantLabel>')
+        # raise RuntimeError(f'Task names do not follow expected format: <taskLabel>_<variantLabel>')
 
     # Validate block number
     if not np.all(block_nums >= 0):
