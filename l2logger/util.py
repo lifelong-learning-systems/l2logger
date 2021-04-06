@@ -195,8 +195,8 @@ def parse_blocks(data: pd.DataFrame) -> pd.DataFrame:
     return blocks_df
 
 
-def read_logger_info(input_dir: str) -> List[str]:
-    """Parse logger info file for valid metric columns.
+def read_logger_info(input_dir: str) -> dict:
+    """Read logger info file with valid metric columns.
 
     Args:
         input_dir (str): The top-level log directory.
@@ -205,8 +205,7 @@ def read_logger_info(input_dir: str) -> List[str]:
         FileNotFoundError: If logger info file is not found.
 
     Returns:
-        List[str]: The application-specific metrics columns that the metrics framework can compute
-            metrics on.
+        dict: The logger info dictionary.
     """
 
     # This function reads the logger info JSON file in the input directory and returns the list of
@@ -218,12 +217,11 @@ def read_logger_info(input_dir: str) -> List[str]:
         raise FileNotFoundError(f'Logger info file not found!')
 
     with open(fully_qualified_dir / 'logger_info.json') as json_file:
-        logger_info = json.load(json_file)
-        return logger_info['metrics_columns']
+        return json.load(json_file)
 
 
-def validate_scenario_info(input_dir: str) -> None:
-    """Validate scenario information file with complexity, difficulty, and scenario type.
+def read_scenario_info(input_dir: str) -> dict:
+    """Read scenario information file with complexity, difficulty, and scenario type.
 
     Args:
         input_dir (str): The top-level log directory.
@@ -233,6 +231,9 @@ def validate_scenario_info(input_dir: str) -> None:
         RuntimeError: If invalid scenario complexity specified.
         RuntimeError: If invalid scenario difficulty specified.
         RuntimeError: If invalid scenario type specified.
+
+    Returns:
+        dict: The scenario info dictionary.
     """
 
     # This function reads the scenario info JSON file in the input directory and validates the contents
@@ -245,24 +246,29 @@ def validate_scenario_info(input_dir: str) -> None:
 
     with open(fully_qualified_dir / 'scenario_info.json') as json_file:
         scenario_info = json.load(json_file)
-        
+
         if 'complexity' in scenario_info.keys():
             if scenario_info['complexity'] not in ['1-low', '2-intermediate', '3-high']:
                 raise RuntimeError(f"Invalid complexity for {scenario_dir}: {scenario_info['complexity']}")
         else:
+            scenario_info['complexity'] = ''
             warnings.warn(f'Complexity not defined in scenario: {scenario_dir}')
 
         if 'difficulty' in scenario_info.keys():
             if scenario_info['difficulty'] not in ['1-easy', '2-medium', '3-hard']:
                 raise RuntimeError(f"Invalid difficulty for {scenario_dir}: {scenario_info['difficulty']}")
         else:
+            scenario_info['difficulty'] = ''
             warnings.warn(f'Difficulty not defined in scenario: {scenario_dir}')
 
         if 'scenario_type' in scenario_info.keys():
             if scenario_info['scenario_type'] not in ['permuted', 'alternating', 'custom']:
                 raise RuntimeError(f"Invalid scenario type for {scenario_dir}: {scenario_info['scenario_type']}")
         else:
+            scenario_info['scenario_type'] = ''
             warnings.warn(f'Scenario type not defined in scenario: {scenario_dir}')
+
+        return scenario_info
 
 
 def validate_log(data: pd.DataFrame, metric_fields: List[str]) -> None:
