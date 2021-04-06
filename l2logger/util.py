@@ -318,8 +318,7 @@ def validate_log(data: pd.DataFrame, metric_fields: List[str]) -> None:
 
     # Validate task naming convention
     if None in [re.fullmatch(task_name_pattern, str(task_name)) for task_name in task_names]:
-        warnings.warn(f'Task names do not follow expected format: <taskLabel>_<variantLabel>')
-        # raise RuntimeError(f'Task names do not follow expected format: <taskLabel>_<variantLabel>')
+        warnings.warn(f'Task names do not follow expected format: <tasklabel>_<variantlabel>')
 
     # Validate block number
     if not np.all(block_nums >= 0):
