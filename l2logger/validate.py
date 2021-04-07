@@ -18,9 +18,11 @@
 
 import argparse
 import traceback
+from pathlib import Path
+
+from tabulate import tabulate
 
 from l2logger import util
-from tabulate import tabulate
 
 
 def run():
@@ -32,18 +34,19 @@ def run():
 
     # Parse arguments
     args = parser.parse_args()
+    log_dir = Path(args.log_dir)
 
     # Attempt to read log data
-    log_data = util.read_log_data(args.log_dir)
+    log_data = util.read_log_data(log_dir)
 
     # Get metric fields
-    metric_fields = util.read_logger_info(args.log_dir)
+    logger_info = util.read_logger_info(log_dir)
 
     # Validate scenario info
-    util.read_scenario_info(args.log_dir)
+    util.read_scenario_info(log_dir)
 
     # Validate log format
-    util.validate_log(log_data, metric_fields)
+    util.validate_log(log_data, logger_info['metrics_columns'])
     print('\nLog format validation passed!\n')
 
     # Fill in regime number and sort

@@ -28,18 +28,17 @@ import numpy as np
 import pandas as pd
 
 
-def get_l2data_root(warn: bool = True) -> str:
+def get_l2data_root(warn: bool = True) -> Path:
     """Get the root directory where L2 data and logs are saved.
-
     Args:
         warn (bool, optional): Flag for enabling/disabling warning message. Defaults to True.
 
     Returns:
-        str: The L2Data root directory path.
+        Path: The L2Data root directory path.
     """
 
     try:
-        root_dir = os.environ['L2DATA']
+        root_dir = Path(os.environ['L2DATA'])
     except KeyError:
         if warn:
             msg = "L2DATA directory not specified. Using ~/l2data as default.\n\n" \
@@ -50,44 +49,38 @@ def get_l2data_root(warn: bool = True) -> str:
             warnings.warn(msg)
         root_dir = 'l2data'
         if platform.system().lower() == 'windows':
-            root_dir = os.path.join(os.environ['APPDATA'], root_dir)
+            root_dir = Path(os.environ['APPDATA']) / root_dir
         else:
-            root_dir = os.path.join(os.path.expanduser('~'), root_dir)
+            root_dir = Path(os.path.expanduser('~')) / root_dir
 
-    if not os.path.exists(root_dir):
-        os.makedirs(root_dir, exist_ok=True)
+    if not root_dir.exists():
+        root_dir.mkdir(parents=True, exist_ok=True)
 
     return root_dir
 
 
-def get_l2root_base_dirs(directory_to_append: str, sub_to_get: str = None) -> str:
-    """Get the base L2DATA path and go one level down with the option to return the path string for
-    the directory or the file underneath.
+def get_l2root_base_dirs(directory_to_append: str, sub_to_get: str = '') -> Path:
+    """Get the base L2DATA path and go one level down with the option to return the path for the
+    directory or the file underneath.
 
     e.g. $L2DATA/logs/some_log_directory or $L2DATA/taskinfo/info.json
 
     Args:
         directory_to_append (str): The L2Data subdirectory.
-        sub_to_get (str, optional): The further subdirectory or file to append. Defaults to None.
+        sub_to_get (str, optional): The further subdirectory or file to append. Defaults to ''.
 
     Returns:
-        str: The path of the L2Data subdirectory or file.
+        Path: The path of the L2Data subdirectory or file.
     """
 
-    file_info_to_return = os.path.join(get_l2data_root(), directory_to_append)
-
-    if sub_to_get:
-        base_dir = file_info_to_return
-        file_info_to_return = os.path.join(base_dir, sub_to_get)
-
-    return file_info_to_return
+    return get_l2data_root() / directory_to_append / sub_to_get
 
 
-def get_fully_qualified_name(log_dir: str) -> str:
+def get_fully_qualified_name(log_dir: Path) -> Path:
     """Get fully qualified path of log directory.
 
-    Checks if the log directory exists in L2Data/logs first. If not, then this function will check
-    the current working directory.
+    Checks if the log directory path exists as a relative or absolute path first. If not, then this
+    function will check L2Data/logs.
 
     Args:
         log_dir (str): The log directory name.
@@ -99,20 +92,19 @@ def get_fully_qualified_name(log_dir: str) -> str:
         str: The full path to the log directory.
     """
 
-    if os.path.dirname(log_dir.strip('/\\')) == '':
-        return get_l2root_base_dirs('logs', log_dir)
+    if log_dir.exists():
+        return log_dir
+    elif log_dir.parent == Path('.'):
+        return get_l2root_base_dirs('logs', log_dir.name)
     else:
-        if os.path.isdir(log_dir):
-            return log_dir
-        else:
-            raise NotADirectoryError
+        raise NotADirectoryError
 
 
-def read_log_data(input_dir: str, analysis_variables: List[str] = None) -> pd.DataFrame:
+def read_log_data(log_dir: Path, analysis_variables: List[str] = None) -> pd.DataFrame:
     """Parse input directory for data log files and aggregate into Pandas DataFrame.
 
     Args:
-        input_dir (str): The top-level log directory.
+        log_dir (Path): The top-level log directory.
         analysis_variables (List[str], optional): Filtered column names to import. Defaults to None.
 
     Raises:
@@ -124,7 +116,7 @@ def read_log_data(input_dir: str, analysis_variables: List[str] = None) -> pd.Da
 
     logs = None
 
-    fully_qualified_dir = Path(get_fully_qualified_name(input_dir))
+    fully_qualified_dir = get_fully_qualified_name(log_dir)
 
     if not fully_qualified_dir.is_dir():
         raise FileNotFoundError(f'Log directory not found!')
@@ -195,7 +187,7 @@ def parse_blocks(data: pd.DataFrame) -> pd.DataFrame:
     return blocks_df
 
 
-def read_logger_info(input_dir: str) -> dict:
+def read_logger_info(input_dir: Path) -> dict:
     """Read logger info file with valid metric columns.
 
     Args:
@@ -220,11 +212,11 @@ def read_logger_info(input_dir: str) -> dict:
         return json.load(json_file)
 
 
-def read_scenario_info(input_dir: str) -> dict:
+def read_scenario_info(input_dir: Path) -> dict:
     """Read scenario information file with complexity, difficulty, and scenario type.
 
     Args:
-        input_dir (str): The top-level log directory.
+        input_dir (Path): The top-level log directory.
 
     Raises:
         FileNotFoundError: If scenario info file is not found.
@@ -238,7 +230,7 @@ def read_scenario_info(input_dir: str) -> dict:
 
     # This function reads the scenario info JSON file in the input directory and validates the contents
 
-    fully_qualified_dir = Path(get_fully_qualified_name(input_dir))
+    fully_qualified_dir = get_fully_qualified_name(input_dir)
     scenario_dir = fully_qualified_dir.name
 
     if not (fully_qualified_dir / 'scenario_info.json').exists():
