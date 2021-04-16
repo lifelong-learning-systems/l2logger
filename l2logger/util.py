@@ -148,10 +148,10 @@ def fill_regime_num(data: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: The log data with regime numbers filled in.
     """
 
-    block_nums = data.block_num.values
-    block_types = data.block_type.values
-    task_names = data.task_name.values
-    task_params = data.task_params.fillna('').values
+    block_nums = data.block_num.to_numpy()
+    block_types = data.block_type.to_numpy()
+    task_names = data.task_name.to_numpy()
+    task_params = data.task_params.fillna('').to_numpy()
 
     # Get indices where a regime change has occurred
     changes = (block_nums[:-1] != block_nums[1:]) + (block_types[:-1] != block_types[1:]) + \
@@ -180,7 +180,7 @@ def parse_blocks(data: pd.DataFrame) -> pd.DataFrame:
     blocks_df = data.loc[:, ['regime_num', 'block_num', 'block_type', 'task_name', 'task_params']].drop_duplicates()
 
     # Quick check to make sure the regime numbers (zero indexed) aren't a mismatch on the length of the regime nums array
-    num_regimes = max(data['regime_num'].values) + 1
+    num_regimes = max(data['regime_num'].to_numpy()) + 1
     if num_regimes != blocks_df.shape[0]:
         warnings.warn(f'Number of regimes: {num_regimes} and parsed blocks {blocks_df.shape[0]} mismatch!')
 
@@ -300,13 +300,13 @@ def validate_log(data: pd.DataFrame, metric_fields: List[str]) -> None:
         raise RuntimeError(f'metric record fields missing: expected at least '
                            f'{metric_fields}, got {set(data.columns)}')
 
-    task_names = np.unique(data.task_name.values)
-    block_nums = data.block_num.values
-    exp_nums = data.exp_num.values
-    block_types = data.block_type.values
-    exp_statuses = data.exp_status.values
-    worker_ids = data.worker_id.values
-    task_params = data.task_params.fillna('').values
+    task_names = np.unique(data.task_name.to_numpy())
+    block_nums = data.block_num.to_numpy()
+    exp_nums = data.exp_num.to_numpy()
+    block_types = data.block_type.to_numpy()
+    exp_statuses = data.exp_status.to_numpy()
+    worker_ids = data.worker_id.to_numpy()
+    task_params = data.task_params.fillna('').to_numpy()
 
     # Validate task naming convention
     if None in [re.fullmatch(task_name_pattern, str(task_name)) for task_name in task_names]:
