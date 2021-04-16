@@ -10,7 +10,8 @@ SCENARIO_DIR='simple'
 SCENARIO_INFO = {
     'author': 'JHU APL',
     'complexity': '1-low',
-    'difficulty': '2-medium'
+    'difficulty': '2-medium',
+    'scenario_type': 'custom'
 }
 LOGGER_INFO = {
     'metrics_columns': ['reward'],
