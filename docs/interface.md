@@ -30,8 +30,8 @@ The logger takes four input arguments, with the last one optional.
       automatically.
 - `scenario_info` (default: `{}`):
   - The dict of meta data desired by the developer.
-  - There are no limits to what this object contains, but `complexity` and `difficulty`
-    are both required for the evaluation framework to aggregate metrics data.
+  - There are no limits to what this object contains, but `complexity`, `difficulty`, and `scenario_type`
+    are all required for the evaluation framework to aggregate metrics data.
     - Valid values for `complexity` are:
       - '1-low'
       - '2-intermediate'
@@ -40,6 +40,10 @@ The logger takes four input arguments, with the last one optional.
       - '1-easy'
       - '2-medium'
       - '3-hard'
+    - Valid values for `scenario_type` are:
+      - 'permuted'
+      - 'alternating'
+      - 'custom'
   - Examples of other fields include `author`, `scenario_version`, or `input_file`,
     which contains the actual scenario definition.
   - See [here](../examples/example_scenario_info.json) for an example file.
@@ -53,7 +57,8 @@ dir = 'l2_logs'
 name = 'test_scenario'
 cols = {'metrics_columns': ['reward']}
 meta = {'author': 'JHU APL', 'complexity': '1-low',
-        'difficulty': '2-medium', 'scenario_version': '0.1'}
+        'difficulty': '2-medium', 'scenario_type': 'custom',
+        'scenario_version': '0.1'}
 logger = l2logger.DataLogger(dir, name, cols, meta)
 ```
 

@@ -18,9 +18,11 @@
 
 import argparse
 import traceback
+from pathlib import Path
+
+from tabulate import tabulate
 
 from l2logger import util
-from tabulate import tabulate
 
 
 def run():
@@ -28,22 +30,23 @@ def run():
     parser = argparse.ArgumentParser(description='Validate log format from the command line')
 
     # Log directories can be absolute paths, relative paths, or paths found in $L2DATA/logs
-    parser.add_argument('-l', '--log-dir', required=True, help='Log directory of scenario')
+    parser.add_argument('log_dir', type=str, help='Log directory of scenario')
 
     # Parse arguments
     args = parser.parse_args()
+    log_dir = Path(args.log_dir)
 
     # Attempt to read log data
-    log_data = util.read_log_data(args.log_dir)
+    log_data = util.read_log_data(log_dir)
 
     # Get metric fields
-    metric_fields = util.read_logger_info(args.log_dir)
+    logger_info = util.read_logger_info(log_dir)
 
     # Validate scenario info
-    util.validate_scenario_info(args.log_dir)
+    util.read_scenario_info(log_dir)
 
     # Validate log format
-    util.validate_log(log_data, metric_fields)
+    util.validate_log(log_data, logger_info['metrics_columns'])
     print('\nLog format validation passed!\n')
 
     # Fill in regime number and sort
@@ -51,14 +54,14 @@ def run():
     log_data = log_data.sort_values(by=['regime_num', 'exp_num']).set_index("regime_num", drop=False)
 
     # Print log summary
-    _, log_summary = util.parse_blocks(log_data)
+    log_summary = util.parse_blocks(log_data)
     if log_summary['task_params'].dropna().size:
         log_summary['task_params'] = log_summary['task_params'].apply(lambda x: x[:25] + '...' if len(x) > 25 else x)
     else:
         log_summary = log_summary.dropna(axis=1)
 
     print('Log summary:')
-    print(tabulate(log_summary, headers='keys', tablefmt='psql'))
+    print(tabulate(log_summary.drop(columns='regime_num'), headers='keys', tablefmt='psql'))
 
 
 if __name__ == '__main__':

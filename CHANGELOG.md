@@ -2,6 +2,16 @@
 
 All notable changes to this repository are documented here. We are using [Semantic Versioning for Documents](https://semverdoc.org/), in which a version number has the format `major.minor.patch`.
 
+## 1.1.0 - 2021-04-12
+
+- Optimized logger utility performance with numpy vectorization
+- Modified log directory to be positional argument in validation module
+- Simplified block parsing algorithm
+- Added handling of scenario type in scenario info file
+- Added check for task naming format
+- Return entire dictionaries for logger info and scenario info function
+- Replaced os path calls with pathlib
+
 ## 1.0.7 - 2021-03-01
 
 - Added block number change as additional signal for regime change
