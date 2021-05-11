@@ -65,7 +65,7 @@ class TSVLogFile():
 
 class DataLogger():
 
-    _LOG_FORMAT_VERSION = '1.0'
+    _LOG_FORMAT_VERSION = '1.1'
 
     def __init__(self, logging_base_dir: str, scenario_name: str, logger_info: dict, scenario_info: dict = None) -> None:
         self._standard_fields = [
