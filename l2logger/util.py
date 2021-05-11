@@ -135,6 +135,11 @@ def read_log_data(log_dir: Path, analysis_variables: List[str] = None) -> pd.Dat
 
     logs = logs.sort_values(['exp_num', 'block_num'], ignore_index=True)
     logs['task_name'] = np.char.lower(list(logs['task_name']))
+
+    # Add default values for block subtype if it doesn't exist
+    if 'block_subtype' not in logs.columns:
+        logs['block_subtype'] = 'wake'
+
     return logs
 
 
