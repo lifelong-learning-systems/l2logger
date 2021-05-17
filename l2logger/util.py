@@ -155,12 +155,14 @@ def fill_regime_num(data: pd.DataFrame) -> pd.DataFrame:
 
     block_nums = data.block_num.to_numpy()
     block_types = data.block_type.to_numpy()
+    block_subtypes = data.block_subtype.to_numpy()
     task_names = data.task_name.to_numpy()
     task_params = data.task_params.fillna('').to_numpy()
 
     # Get indices where a regime change has occurred
     changes = (block_nums[:-1] != block_nums[1:]) + (block_types[:-1] != block_types[1:]) + \
-        (task_names[:-1] != task_names[1:]) + (task_params[:-1] != task_params[1:])
+        (block_subtypes[:-1] != block_subtypes[1:]) + (task_names[:-1] != task_names[1:]) + \
+        (task_params[:-1] != task_params[1:])
 
     # Number the regime changes
     regimes = [np.count_nonzero(changes[:i]) for i, _ in enumerate(changes)]
