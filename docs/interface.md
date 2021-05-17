@@ -102,6 +102,8 @@ Here's a deeper dive on the constraints and description of each field:
   - if not provided, will *default* to 'worker-default'
 - `block_type`
   - string; can only be one of 'train' or 'test'
+- `block_subtype`
+  - string; can only be one of 'wake' or 'sleep'
 - `task_name`
   - string; no restrictions
 - `task_params`

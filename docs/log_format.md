@@ -2,7 +2,7 @@
 
 This document describes the `l2logger` output format in terms of the
 directory structure created and the contents of the files therein. This is
-***version `1.0`*** of the `log_output_format`.
+***version `1.1`*** of the `log_output_format`.
 
 ## Directory Structure
 

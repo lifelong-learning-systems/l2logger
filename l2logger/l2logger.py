@@ -65,12 +65,12 @@ class TSVLogFile():
 
 class DataLogger():
 
-    _LOG_FORMAT_VERSION = '1.0'
+    _LOG_FORMAT_VERSION = '1.1'
 
     def __init__(self, logging_base_dir: str, scenario_name: str, logger_info: dict, scenario_info: dict = None) -> None:
         self._standard_fields = [
-            'block_num', 'exp_num', 'worker_id', 'block_type', 'task_name', 
-            'task_params', 'exp_status', 'timestamp'
+            'block_num', 'exp_num', 'worker_id', 'block_type', 'block_subtype',
+            'task_name', 'task_params', 'exp_status', 'timestamp'
         ]
         self._logging_base_dir = logging_base_dir
         # should be logging_base_dir/scenario-TIMESTAMP
@@ -96,9 +96,11 @@ class DataLogger():
         self._all_fields_ordered = None
         self._last_exp_num = None
         self._last_block_num = None
+        self._default_block_subtype = 'wake'
         self._default_exp_status = 'complete'
         self._default_worker_id = 'worker-default'
         self._block_types = ['train', 'test']
+        self._block_subtypes = ['wake', 'sleep']
         self._exp_statuses = ['complete', 'incomplete']
         self._worker_pattern = re.compile(r'[0-9a-zA-Z_\-.]+')
 
@@ -145,6 +147,7 @@ class DataLogger():
     def _validate_record(self, record: dict) -> None:
         self._validate_fields(record)
         self._validate_block_type(record['block_type'])
+        self._validate_block_subtype(record['block_subtype'])
         self._validate_exp_status(record['exp_status'])
         self._validate_worker_id(record['worker_id'])
         self._validate_task_params(record['task_params'])
@@ -160,6 +163,8 @@ class DataLogger():
             raise RuntimeError('timestamp column cannot be overwritten')
         else:
             new_record['timestamp'] = datetime.now().strftime('%Y%m%dT%H%M%S.%f')
+        if not 'block_subtype' in new_record:
+            new_record['block_subtype'] = self._default_block_subtype
         if not 'exp_status' in new_record:
             new_record['exp_status'] = self._default_exp_status
         if not 'worker_id' in new_record:
@@ -222,6 +227,10 @@ class DataLogger():
     def _validate_block_type(self, block_type: str) -> None:
         if not block_type in self._block_types:
             raise RuntimeError(f'block_type must be one of {self._block_types}')
+
+    def _validate_block_subtype(self, block_subtype: str) -> None:
+        if not block_subtype in self._block_subtypes:
+            raise RuntimeError(f'block_subtype must be one of {self._block_subtypes}')
     
     def _validate_exp_status(self, exp_status: str) -> None:
         if not exp_status in self._exp_statuses:

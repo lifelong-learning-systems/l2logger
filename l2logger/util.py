@@ -135,6 +135,11 @@ def read_log_data(log_dir: Path, analysis_variables: List[str] = None) -> pd.Dat
 
     logs = logs.sort_values(['exp_num', 'block_num'], ignore_index=True)
     logs['task_name'] = np.char.lower(list(logs['task_name']))
+
+    # Add default values for block subtype if it doesn't exist
+    if 'block_subtype' not in logs.columns:
+        logs['block_subtype'] = 'wake'
+
     return logs
 
 
@@ -177,10 +182,13 @@ def parse_blocks(data: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: Block info DataFrame.
     """
 
-    blocks_df = data.loc[:, ['regime_num', 'block_num', 'block_type', 'task_name', 'task_params']].drop_duplicates()
+    if 'block_subtype' in data.columns:
+        blocks_df = data.loc[:, ['regime_num', 'block_num', 'block_type', 'block_subtype', 'task_name', 'task_params']].drop_duplicates()
+    else:
+        blocks_df = data.loc[:, ['regime_num', 'block_num', 'block_type', 'task_name', 'task_params']].drop_duplicates()
 
     # Quick check to make sure the regime numbers (zero indexed) aren't a mismatch on the length of the regime nums array
-    num_regimes = max(data['regime_num'].to_numpy()) + 1
+    num_regimes = np.max(data['regime_num'].to_numpy()) + 1
     if num_regimes != blocks_df.shape[0]:
         warnings.warn(f'Number of regimes: {num_regimes} and parsed blocks {blocks_df.shape[0]} mismatch!')
 
@@ -279,6 +287,7 @@ def validate_log(data: pd.DataFrame, metric_fields: List[str]) -> None:
         RuntimeError: If experience number is negative or non-integer.
         RuntimeError: If experience number is decreasing.
         RuntimeError: If block type is invalid.
+        RuntimeError: If block subtype is invalid.
         RuntimeError: If experience status is invalid.
         RuntimeError: If worker ID is invalid.
         RuntimeError: If task parameters is an invalid JSON.
@@ -287,6 +296,7 @@ def validate_log(data: pd.DataFrame, metric_fields: List[str]) -> None:
     # Initialize values
     task_name_pattern = re.compile(r'[0-9a-zA-Z]+_[0-9a-zA-Z]+')
     valid_block_types = ['train', 'test']
+    valid_block_subtypes = ['wake', 'sleep']
     valid_exp_statuses = ['complete', 'incomplete']
     worker_pattern = re.compile(r'[0-9a-zA-Z_\-.]+')
     standard_fields = ['block_num', 'exp_num', 'block_type',
@@ -304,6 +314,7 @@ def validate_log(data: pd.DataFrame, metric_fields: List[str]) -> None:
     block_nums = data.block_num.to_numpy()
     exp_nums = data.exp_num.to_numpy()
     block_types = data.block_type.to_numpy()
+    block_subtypes = data.get('block_subtype', [])
     exp_statuses = data.exp_status.to_numpy()
     worker_ids = data.worker_id.to_numpy()
     task_params = data.task_params.fillna('').to_numpy()
@@ -326,11 +337,15 @@ def validate_log(data: pd.DataFrame, metric_fields: List[str]) -> None:
 
     # Validate block type
     if not np.all(np.isin(block_types, valid_block_types)):
-        raise RuntimeError(f'block_type must be one of {block_types}')
+        raise RuntimeError(f'block_type must be one of {valid_block_types}')
+
+    # Validate block subtype
+    if not np.all(np.isin(block_subtypes, valid_block_subtypes)):
+        raise RuntimeError(f'block_subtype must be one of {valid_block_subtypes}')
 
     # Validate exp status
     if not np.all(np.isin(exp_statuses, valid_exp_statuses)):
-        raise RuntimeError(f'exp_status must be one of {exp_statuses}')   
+        raise RuntimeError(f'exp_status must be one of {valid_exp_statuses}')   
 
     # Validate worker ID string pattern
     if None in [re.fullmatch(worker_pattern, str(worker_id)) for worker_id in worker_ids]:

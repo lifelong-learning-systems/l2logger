@@ -2,6 +2,11 @@
 
 All notable changes to this repository are documented here. We are using [Semantic Versioning for Documents](https://semverdoc.org/), in which a version number has the format `major.minor.patch`.
 
+## 1.2.0 - 2021-05-11
+
+- Added support for block subtypes (wake, sleep)
+- Updated documentation and log format version number
+
 ## 1.1.0 - 2021-04-12
 
 - Optimized logger utility performance with numpy vectorization
