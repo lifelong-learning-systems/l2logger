@@ -2,6 +2,10 @@
 
 All notable changes to this repository are documented here. We are using [Semantic Versioning for Documents](https://semverdoc.org/), in which a version number has the format `major.minor.patch`.
 
+## 1.3.0 - 2021-07-27
+
+- Added support for additional scenario types (condensed, dispersed)
+
 ## 1.2.1 - 2021-05-17
 
 - Updated regime fill to look for changes in block subtype
