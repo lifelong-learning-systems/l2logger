@@ -41,6 +41,8 @@ The logger takes four input arguments, with the last one optional.
       - '2-medium'
       - '3-hard'
     - Valid values for `scenario_type` are:
+      - 'condensed'
+      - 'dispersed'
       - 'permuted'
       - 'alternating'
       - 'custom'
@@ -105,7 +107,7 @@ Here's a deeper dive on the constraints and description of each field:
 - `block_subtype`
   - string; can only be one of 'wake' or 'sleep'
 - `task_name`
-  - string; no restrictions
+  - string; formatted as 'tasklabel_variantlabel'
 - `task_params`
   - dict; must be JSON serializable (can have `json.dumps(...)` invoked)
 - `exp_status`

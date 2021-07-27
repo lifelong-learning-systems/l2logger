@@ -264,7 +264,7 @@ def read_scenario_info(input_dir: Path) -> dict:
             warnings.warn(f'Difficulty not defined in scenario: {scenario_dir}')
 
         if 'scenario_type' in scenario_info.keys():
-            if scenario_info['scenario_type'] not in ['permuted', 'alternating', 'custom']:
+            if scenario_info['scenario_type'] not in ['condensed', 'dispersed', 'permuted', 'alternating', 'custom']:
                 raise RuntimeError(f"Invalid scenario type for {scenario_dir}: {scenario_info['scenario_type']}")
         else:
             scenario_info['scenario_type'] = ''
