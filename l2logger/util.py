@@ -172,20 +172,23 @@ def fill_regime_num(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-def parse_blocks(data: pd.DataFrame) -> pd.DataFrame:
+def parse_blocks(data: pd.DataFrame, include_task_params: bool = True) -> pd.DataFrame:
     """Parse full DataFrame and create summary DataFrame of high-level block information.
 
     Args:
         data (pd.DataFrame): Log data.
+        include_task_params(bool): Flag for including task params column. Defaults to True.
 
     Returns:
         pd.DataFrame: Block info DataFrame.
     """
 
-    if 'block_subtype' in data.columns:
-        blocks_df = data.loc[:, ['regime_num', 'block_num', 'block_type', 'block_subtype', 'task_name', 'task_params']].drop_duplicates()
-    else:
-        blocks_df = data.loc[:, ['regime_num', 'block_num', 'block_type', 'task_name', 'task_params']].drop_duplicates()
+    cols = ['regime_num', 'block_num', 'block_type', 'block_subtype', 'task_name']
+
+    if include_task_params:
+        cols.append('task_params')
+
+    blocks_df = data.loc[:, cols].drop_duplicates()
 
     # Quick check to make sure the regime numbers (zero indexed) aren't a mismatch on the length of the regime nums array
     num_regimes = np.max(data['regime_num'].to_numpy()) + 1
