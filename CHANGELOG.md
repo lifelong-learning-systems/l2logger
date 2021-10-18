@@ -2,6 +2,10 @@
 
 All notable changes to this repository are documented here. We are using [Semantic Versioning for Documents](https://semverdoc.org/), in which a version number has the format `major.minor.patch`.
 
+## 1.5.0 - 2021-10-18
+
+- Updated README and copyright statements
+
 ## 1.4.0 - 2021-08-09
 
 - Added support for variant-agnostic calculations by modifying task parameter usage in regime identification

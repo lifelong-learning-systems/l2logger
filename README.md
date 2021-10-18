@@ -1,5 +1,23 @@
 # Lifelong Learning Logger (L2Logger)
 
+![logo](docs/apl_small_vertical_blue.png)
+
+## Table of Contents
+
+- [Introduction](#introduction)
+- [Logger Term Definitions/Glossary](#logger-term-definitionsglossary)
+- [Logger Output Format](#logger-output-format)
+- [Interface/Usage](#interfaceusage)
+- [Examples](#examples)
+- [Tests](#tests)
+- [Log Validation](#log-validation)
+  - [Example](#example)
+  - [Usage](#usage)
+- [Changelog](#changelog)
+- [Acknowledgements](#acknowledgements)
+
+## Introduction
+
 The Lifelong Learning Logger is a utility library provided for
 producing logs in a convenient format for the provided l2metrics module,
 but can also be used independently.
@@ -61,3 +79,9 @@ Note: This script only validates one instance of a scenario output; it does not 
 
 See [CHANGELOG.md](./CHANGELOG.md) for a list of notable changes to the
 project.
+
+## Acknowledgements
+
+Primary development of Lifelong Learning Logger (L2Logger) was funded by the DARPA Lifelong Learning Machines (L2M) Program.
+
+© 2021 The Johns Hopkins University Applied Physics Laboratory LLC
