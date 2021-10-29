@@ -14,6 +14,7 @@
   - [Example](#example)
   - [Usage](#usage)
 - [Changelog](#changelog)
+- [License](#license)
 - [Acknowledgements](#acknowledgements)
 
 ## Introduction
@@ -79,6 +80,10 @@ Note: This script only validates one instance of a scenario output; it does not 
 
 See [CHANGELOG.md](./CHANGELOG.md) for a list of notable changes to the
 project.
+
+## License
+
+See [LICENSE](LICENSE) for license information.
 
 ## Acknowledgements
 
