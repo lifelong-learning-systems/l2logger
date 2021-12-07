@@ -170,7 +170,7 @@ def fill_regime_num(data: pd.DataFrame) -> pd.DataFrame:
     regimes.append(regimes[-1] + 1 if changes[-1] else regimes[-1])
 
     # Set regime numbers in data
-    data['regime_num'] = regimes
+    data.insert(1, 'regime_num', regimes)
 
     return data
 
