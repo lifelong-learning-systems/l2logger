@@ -45,6 +45,7 @@ The logger takes four input arguments, with the last one optional.
       - 'dispersed'
       - 'permuted'
       - 'alternating'
+      - 'ste'
       - 'custom'
   - Examples of other fields include `author`, `scenario_version`, or `input_file`,
     which contains the actual scenario definition.

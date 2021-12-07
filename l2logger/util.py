@@ -170,7 +170,7 @@ def fill_regime_num(data: pd.DataFrame) -> pd.DataFrame:
     regimes.append(regimes[-1] + 1 if changes[-1] else regimes[-1])
 
     # Set regime numbers in data
-    data['regime_num'] = regimes
+    data.insert(1, 'regime_num', regimes)
 
     return data
 
@@ -244,6 +244,10 @@ def read_scenario_info(input_dir: Path) -> dict:
 
     # This function reads the scenario info JSON file in the input directory and validates the contents
 
+    valid_complexities = ['1-low', '2-intermediate', '3-high']
+    valid_difficulties = ['1-easy', '2-medium', '3-hard']
+    valid_scenarios = ['condensed', 'dispersed', 'permuted', 'alternating', 'ste', 'custom']
+
     fully_qualified_dir = get_fully_qualified_name(input_dir)
     scenario_dir = fully_qualified_dir.name
 
@@ -254,21 +258,21 @@ def read_scenario_info(input_dir: Path) -> dict:
         scenario_info = json.load(json_file)
 
         if 'complexity' in scenario_info.keys():
-            if scenario_info['complexity'] not in ['1-low', '2-intermediate', '3-high']:
+            if scenario_info['complexity'].lower() not in valid_complexities:
                 raise RuntimeError(f"Invalid complexity for {scenario_dir}: {scenario_info['complexity']}")
         else:
             scenario_info['complexity'] = ''
             warnings.warn(f'Complexity not defined in scenario: {scenario_dir}')
 
         if 'difficulty' in scenario_info.keys():
-            if scenario_info['difficulty'] not in ['1-easy', '2-medium', '3-hard']:
+            if scenario_info['difficulty'].lower() not in valid_difficulties:
                 raise RuntimeError(f"Invalid difficulty for {scenario_dir}: {scenario_info['difficulty']}")
         else:
             scenario_info['difficulty'] = ''
             warnings.warn(f'Difficulty not defined in scenario: {scenario_dir}')
 
         if 'scenario_type' in scenario_info.keys():
-            if scenario_info['scenario_type'] not in ['condensed', 'dispersed', 'permuted', 'alternating', 'custom']:
+            if scenario_info['scenario_type'].lower() not in valid_scenarios:
                 raise RuntimeError(f"Invalid scenario type for {scenario_dir}: {scenario_info['scenario_type']}")
         else:
             scenario_info['scenario_type'] = ''
