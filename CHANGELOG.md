@@ -2,6 +2,14 @@
 
 All notable changes to this repository are documented here. We are using [Semantic Versioning for Documents](https://semverdoc.org/), in which a version number has the format `major.minor.patch`.
 
+## 1.6.0 - 2021-12-07
+
+- Updated position of regime_num column
+- Created module for combining TSV data files and exporting to Feather or CSV
+- Added a license file
+- Added ste as valid scenario type
+- Cleaned up scenario info validation
+
 ## 1.5.0 - 2021-10-18
 
 - Updated README and copyright statements
