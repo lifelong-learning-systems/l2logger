@@ -56,27 +56,29 @@ See documentation in the test folder at [test/README.md](./test/README.md).
 ## Log Aggregation
 
 L2Logger provides a module for exporting an aggregated data table from an
-L2Logger directory as either a Feather file or CSV.
+L2Logger directory as a TSV, CSV, or Feather file.
 
 ### Aggregation Example
 
+The following is a simple example for how to aggregate a log directory into a single TSV file:
+
 ```bash
-python -m l2logger.aggregate <path/to/log_directory> -f csv -o l2data
+python -m l2logger.aggregate <path/to/log_directory>
 ```
 
 ### Aggregation Usage
 
-```
-usage: python -m l2logger.aggregate [-h] [-f {csv,feather}] [-o OUTPUT] log_dir
+```text
+usage: python -m l2logger.aggregate [-h] [-f {tsv,csv,feather}] [-o OUTPUT] log_dir
 
-Aggregate data within a log directory from the command line    
+Aggregate data within a log directory from the command line
 
 positional arguments:
   log_dir               Log directory of scenario
 
 optional arguments:
   -h, --help            show this help message and exit
-  -f {csv,feather}, --format {csv,feather}
+  -f {tsv,csv,feather}, --format {tsv,csv,feather}
                         Output format of data table
   -o OUTPUT, --output OUTPUT
                         Output filename
@@ -94,7 +96,7 @@ python -m l2logger.validate <path/to/log_directory>
 
 ### Validation Usage
 
-```
+```text
 usage: python -m l2logger.validate [-h] log_dir
 
 Validate log format from the command line

@@ -25,10 +25,13 @@ L2Logger directory as either a Feather file or CSV.
 """
 
 import argparse
+import logging
 import traceback
 from pathlib import Path
 
 from l2logger import util
+
+logger = logging.getLogger("L2Logger Aggregator")
 
 
 def run():
@@ -40,8 +43,8 @@ def run():
     parser.add_argument('log_dir', type=str, help='Log directory of scenario')
 
     # Output format
-    parser.add_argument('-f', '--format', type=str, default='csv',
-                        choices=['csv', 'feather'], help='Output format of data table')
+    parser.add_argument('-f', '--format', type=str, default='tsv',
+                        choices=['tsv', 'csv', 'feather'], help='Output format of data table')
 
     # Output filename
     parser.add_argument('-o', '--output', type=str,
@@ -63,15 +66,20 @@ def run():
         by=['regime_num', 'exp_num']).set_index("regime_num", drop=False)
 
     # Save log data to file
-    if args.format == 'csv':
+    if args.format == 'tsv':
+        log_data.to_csv(Path(args.output + '.tsv'), sep='\t', index=False)
+    elif args.format == 'csv':
         log_data.to_csv(Path(args.output + '.csv'), index=False)
     elif args.format == 'feather':
-        log_data.reset_index(drop=True).to_feather(str(Path(args.output + '.feather')))
+        log_data.reset_index(drop=True).to_feather(
+            str(Path(args.output + '.feather')))
 
 
 if __name__ == '__main__':
+    # Configure logger
+    logging.basicConfig(level=logging.INFO)
+
     try:
         run()
-    except Exception as e:
-        print(f'Error with validating logs: {e}')
-        traceback.print_exc()
+    except (FileNotFoundError, KeyError) as e:
+        logger.exception(f'Error with aggregating logs: {e}')

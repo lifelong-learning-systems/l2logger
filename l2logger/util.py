@@ -128,7 +128,8 @@ def read_log_data(log_dir: Path, analysis_variables: List[str] = None) -> pd.Dat
         if analysis_variables is not None:
             default_cols = ['block_num', 'exp_num', 'block_type', 'worker_id',
                             'task_name', 'task_params', 'exp_status', 'timestamp']
-            df = pd.read_csv(data_file, sep='\t')[default_cols + analysis_variables]
+            df = pd.read_csv(data_file, sep='\t')[
+                default_cols + analysis_variables]
         else:
             df = pd.read_csv(data_file, sep='\t')
         if logs is None:
@@ -163,7 +164,8 @@ def fill_regime_num(data: pd.DataFrame) -> pd.DataFrame:
 
     # Get indices where a regime change has occurred
     changes = (block_nums[:-1] != block_nums[1:]) + (block_types[:-1] != block_types[1:]) + \
-        (block_subtypes[:-1] != block_subtypes[1:]) + (task_names[:-1] != task_names[1:])
+        (block_subtypes[:-1] != block_subtypes[1:]) + \
+        (task_names[:-1] != task_names[1:])
 
     # Number the regime changes
     regimes = [np.count_nonzero(changes[:i]) for i, _ in enumerate(changes)]
@@ -186,17 +188,20 @@ def parse_blocks(data: pd.DataFrame, include_task_params: bool = True) -> pd.Dat
         pd.DataFrame: Block info DataFrame.
     """
 
-    cols = ['regime_num', 'block_num', 'block_type', 'block_subtype', 'task_name']
+    cols = ['regime_num', 'block_num',
+            'block_type', 'block_subtype', 'task_name']
 
     if include_task_params:
         cols.append('task_params')
 
-    blocks_df = data.loc[:, cols].drop_duplicates()
+    blocks_df = data.reset_index(drop=True).groupby(
+        cols, as_index=False).size().rename(columns={'size': 'length'})
 
     # Quick check to make sure the regime numbers (zero indexed) aren't a mismatch on the length of the regime nums array
     num_regimes = np.max(data['regime_num'].to_numpy()) + 1
     if num_regimes != blocks_df.shape[0]:
-        warnings.warn(f'Number of regimes: {num_regimes} and parsed blocks {blocks_df.shape[0]} mismatch!')
+        warnings.warn(
+            f'Number of regimes: {num_regimes} and parsed blocks {blocks_df.shape[0]} mismatch!')
 
     return blocks_df
 
@@ -246,7 +251,8 @@ def read_scenario_info(input_dir: Path) -> dict:
 
     valid_complexities = ['1-low', '2-intermediate', '3-high']
     valid_difficulties = ['1-easy', '2-medium', '3-hard']
-    valid_scenarios = ['condensed', 'dispersed', 'permuted', 'alternating', 'ste', 'custom']
+    valid_scenarios = ['condensed', 'dispersed',
+                       'permuted', 'alternating', 'ste', 'custom']
 
     fully_qualified_dir = get_fully_qualified_name(input_dir)
     scenario_dir = fully_qualified_dir.name
@@ -259,24 +265,30 @@ def read_scenario_info(input_dir: Path) -> dict:
 
         if 'complexity' in scenario_info.keys():
             if scenario_info['complexity'].lower() not in valid_complexities:
-                raise RuntimeError(f"Invalid complexity for {scenario_dir}: {scenario_info['complexity']}")
+                raise RuntimeError(
+                    f"Invalid complexity for {scenario_dir}: {scenario_info['complexity']}")
         else:
             scenario_info['complexity'] = ''
-            warnings.warn(f'Complexity not defined in scenario: {scenario_dir}')
+            warnings.warn(
+                f'Complexity not defined in scenario: {scenario_dir}')
 
         if 'difficulty' in scenario_info.keys():
             if scenario_info['difficulty'].lower() not in valid_difficulties:
-                raise RuntimeError(f"Invalid difficulty for {scenario_dir}: {scenario_info['difficulty']}")
+                raise RuntimeError(
+                    f"Invalid difficulty for {scenario_dir}: {scenario_info['difficulty']}")
         else:
             scenario_info['difficulty'] = ''
-            warnings.warn(f'Difficulty not defined in scenario: {scenario_dir}')
+            warnings.warn(
+                f'Difficulty not defined in scenario: {scenario_dir}')
 
         if 'scenario_type' in scenario_info.keys():
             if scenario_info['scenario_type'].lower() not in valid_scenarios:
-                raise RuntimeError(f"Invalid scenario type for {scenario_dir}: {scenario_info['scenario_type']}")
+                raise RuntimeError(
+                    f"Invalid scenario type for {scenario_dir}: {scenario_info['scenario_type']}")
         else:
             scenario_info['scenario_type'] = ''
-            warnings.warn(f'Scenario type not defined in scenario: {scenario_dir}')
+            warnings.warn(
+                f'Scenario type not defined in scenario: {scenario_dir}')
 
         return scenario_info
 
@@ -331,7 +343,8 @@ def validate_log(data: pd.DataFrame, metric_fields: List[str]) -> None:
 
     # Validate task naming convention
     if None in [re.fullmatch(task_name_pattern, str(task_name)) for task_name in task_names]:
-        warnings.warn(f'Task names do not follow expected format: <tasklabel>_<variantlabel>')
+        warnings.warn(
+            f'Task names do not follow expected format: <tasklabel>_<variantlabel>')
 
     # Validate block number
     if not np.all(block_nums >= 0):
@@ -351,18 +364,21 @@ def validate_log(data: pd.DataFrame, metric_fields: List[str]) -> None:
 
     # Validate block subtype
     if not np.all(np.isin(block_subtypes, valid_block_subtypes)):
-        raise RuntimeError(f'block_subtype must be one of {valid_block_subtypes}')
+        raise RuntimeError(
+            f'block_subtype must be one of {valid_block_subtypes}')
 
     # Validate exp status
     if not np.all(np.isin(exp_statuses, valid_exp_statuses)):
-        raise RuntimeError(f'exp_status must be one of {valid_exp_statuses}')   
+        raise RuntimeError(f'exp_status must be one of {valid_exp_statuses}')
 
     # Validate worker ID string pattern
     if None in [re.fullmatch(worker_pattern, str(worker_id)) for worker_id in worker_ids]:
-        raise RuntimeError(f'worker_id can only contain alphanumeric characters, hyphens, dashes, or periods')
+        raise RuntimeError(
+            f'worker_id can only contain alphanumeric characters, hyphens, dashes, or periods')
 
     # Validate task parameters is valid JSON
     try:
-        [json.loads(task_param) for task_param in task_params if task_param != '']
+        [json.loads(task_param)
+         for task_param in task_params if task_param != '']
     except:
         raise RuntimeError('task_params must be valid json')

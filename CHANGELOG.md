@@ -2,6 +2,13 @@
 
 All notable changes to this repository are documented here. We are using [Semantic Versioning for Documents](https://semverdoc.org/), in which a version number has the format `major.minor.patch`.
 
+## 1.7.0 - 2022-01-21
+
+- Added TSV as default for log aggregator
+- Filtered logs by complete experiences for faster validation
+- Added regime length to log summary
+- Replaced tracebacks with logging library
+
 ## 1.6.0 - 2021-12-07
 
 - Updated position of regime_num column

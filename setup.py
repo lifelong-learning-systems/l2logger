@@ -6,18 +6,20 @@ HERE = pathlib.Path(__file__).parent
 
 setup(
     name='l2logger',
-    version='1.6.0',
+    version='1.7.0',
     description='Lifelong learning logger',
     long_description=(HERE / 'README.md').read_text(),
     long_description_content_type='text/markdown',
     author='Eric Nguyen',
     author_email='Eric.Nguyen@jhuapl.edu',
-    license='UNLICENSED',
+    license='MIT',
     classifiers=[
         'Development Status :: 3 - Alpha',
-        'License :: Other/Proprietary License',
+        'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
     ],
     packages=find_packages(),
