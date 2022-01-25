@@ -23,4 +23,4 @@ jobs:
           pip install ./l2logger
       - name: Test with pytest
         run: |
-          pytest tella
+          pytest l2logger
