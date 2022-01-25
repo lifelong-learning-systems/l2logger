@@ -2,33 +2,31 @@
 import json
 import time
 import os
-from l2logger import l2logger 
+from l2logger import l2logger
 
 from mock_agent import MockAgent, SequenceNums
 
-SCENARIO_DIR='simple'
+SCENARIO_DIR = "simple"
 SCENARIO_INFO = {
-    'author': 'JHU APL',
-    'complexity': '1-low',
-    'difficulty': '2-medium',
-    'scenario_type': 'custom'
+    "author": "JHU APL",
+    "complexity": "1-low",
+    "difficulty": "2-medium",
+    "scenario_type": "custom",
 }
-LOGGER_INFO = {
-    'metrics_columns': ['reward'],
-    'log_format_version': '1.0'
-}
+LOGGER_INFO = {"metrics_columns": ["reward"], "log_format_version": "1.0"}
 
-def log_data(data_logger, exp, results, status='complete'):
+
+def log_data(data_logger, exp, results, status="complete"):
     seq = exp.sequence_nums
-    worker = f'{os.path.basename(__file__)}_0'
+    worker = f"{os.path.basename(__file__)}_0"
     record = {
-        'block_num': seq.block_num,
-        'block_type': exp.block_type,
-        'task_params': exp.params,
-        'task_name': exp.task_name,
-        'exp_num': seq.exp_num,
-        'exp_status': status,
-        'worker_id': worker
+        "block_num": seq.block_num,
+        "block_type": exp.block_type,
+        "task_params": exp.params,
+        "task_name": exp.task_name,
+        "exp_num": seq.exp_num,
+        "exp_status": status,
+        "worker_id": worker,
     }
 
     record.update(results)
@@ -48,11 +46,13 @@ def run_scenario(agent, data_logger):
 
         last_seq = cur_seq
 
+
 if __name__ == "__main__":
-    with open('simple_scenario.json') as f:
+    with open("simple_scenario.json") as f:
         data = json.load(f)
-    agent = MockAgent(data['scenario']) 
-    SCENARIO_INFO['input_file'] = data
+    agent = MockAgent(data["scenario"])
+    SCENARIO_INFO["input_file"] = data
     data_logger = l2logger.DataLogger(
-        data['logging_base_dir'], SCENARIO_DIR, LOGGER_INFO, SCENARIO_INFO)
+        data["logging_base_dir"], SCENARIO_DIR, LOGGER_INFO, SCENARIO_INFO
+    )
     run_scenario(agent, data_logger)
