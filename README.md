@@ -122,4 +122,4 @@ See [LICENSE](https://github.com/darpa-l2m/l2logger/blob/release/LICENSE) for li
 
 Primary development of Lifelong Learning Logger (L2Logger) was funded by the DARPA Lifelong Learning Machines (L2M) Program.
 
-© 2021 The Johns Hopkins University Applied Physics Laboratory LLC
+© 2021-2022The Johns Hopkins University Applied Physics Laboratory LLC
