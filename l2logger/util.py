@@ -258,9 +258,6 @@ def read_scenario_info(input_dir: Path) -> dict:
 
     Raises:
         FileNotFoundError: If scenario info file is not found.
-        RuntimeError: If invalid scenario complexity specified.
-        RuntimeError: If invalid scenario difficulty specified.
-        RuntimeError: If invalid scenario type specified.
 
     Returns:
         dict: The scenario info dictionary.
@@ -290,7 +287,7 @@ def read_scenario_info(input_dir: Path) -> dict:
 
         if "complexity" in scenario_info.keys():
             if scenario_info["complexity"].lower() not in valid_complexities:
-                raise RuntimeError(
+                logger.error(
                     f"Invalid complexity for {scenario_dir}: {scenario_info['complexity']}"
                 )
         else:
@@ -299,7 +296,7 @@ def read_scenario_info(input_dir: Path) -> dict:
 
         if "difficulty" in scenario_info.keys():
             if scenario_info["difficulty"].lower() not in valid_difficulties:
-                raise RuntimeError(
+                logger.error(
                     f"Invalid difficulty for {scenario_dir}: {scenario_info['difficulty']}"
                 )
         else:
@@ -308,7 +305,7 @@ def read_scenario_info(input_dir: Path) -> dict:
 
         if "scenario_type" in scenario_info.keys():
             if scenario_info["scenario_type"].lower() not in valid_scenarios:
-                raise RuntimeError(
+                logger.error(
                     f"Invalid scenario type for {scenario_dir}: {scenario_info['scenario_type']}"
                 )
         else:
