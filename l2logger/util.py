@@ -20,15 +20,18 @@ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
 import json
+import logging
 import os
 import platform
 import re
-import warnings
 from pathlib import Path
 from typing import List
 
 import numpy as np
 import pandas as pd
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_l2data_root(warn: bool = True) -> Path:
@@ -51,7 +54,7 @@ def get_l2data_root(warn: bool = True) -> Path:
                 "\t(bash) export L2DATA=/path/to/data/l2data\n"
                 "\t(Windows) set L2DATA=C:\\\\path\\\\to\\\\data\\\\l2data\n"
             )
-            warnings.warn(msg)
+            logger.warning(msg)
         root_dir = "l2data"
         if platform.system().lower() == "windows":
             root_dir = Path(os.environ["APPDATA"]) / root_dir
@@ -215,7 +218,7 @@ def parse_blocks(data: pd.DataFrame, include_task_params: bool = True) -> pd.Dat
     # Quick check to make sure the regime numbers (zero indexed) aren't a mismatch on the length of the regime nums array
     num_regimes = np.max(data["regime_num"].to_numpy()) + 1
     if num_regimes != blocks_df.shape[0]:
-        warnings.warn(
+        logger.warning(
             f"Number of regimes: {num_regimes} and parsed blocks {blocks_df.shape[0]} mismatch!"
         )
 
@@ -255,9 +258,6 @@ def read_scenario_info(input_dir: Path) -> dict:
 
     Raises:
         FileNotFoundError: If scenario info file is not found.
-        RuntimeError: If invalid scenario complexity specified.
-        RuntimeError: If invalid scenario difficulty specified.
-        RuntimeError: If invalid scenario type specified.
 
     Returns:
         dict: The scenario info dictionary.
@@ -287,30 +287,30 @@ def read_scenario_info(input_dir: Path) -> dict:
 
         if "complexity" in scenario_info.keys():
             if scenario_info["complexity"].lower() not in valid_complexities:
-                raise RuntimeError(
+                logger.error(
                     f"Invalid complexity for {scenario_dir}: {scenario_info['complexity']}"
                 )
         else:
             scenario_info["complexity"] = ""
-            warnings.warn(f"Complexity not defined in scenario: {scenario_dir}")
+            logger.warning(f"Complexity not defined in scenario: {scenario_dir}")
 
         if "difficulty" in scenario_info.keys():
             if scenario_info["difficulty"].lower() not in valid_difficulties:
-                raise RuntimeError(
+                logger.error(
                     f"Invalid difficulty for {scenario_dir}: {scenario_info['difficulty']}"
                 )
         else:
             scenario_info["difficulty"] = ""
-            warnings.warn(f"Difficulty not defined in scenario: {scenario_dir}")
+            logger.warning(f"Difficulty not defined in scenario: {scenario_dir}")
 
         if "scenario_type" in scenario_info.keys():
             if scenario_info["scenario_type"].lower() not in valid_scenarios:
-                raise RuntimeError(
+                logger.error(
                     f"Invalid scenario type for {scenario_dir}: {scenario_info['scenario_type']}"
                 )
         else:
             scenario_info["scenario_type"] = ""
-            warnings.warn(f"Scenario type not defined in scenario: {scenario_dir}")
+            logger.warning(f"Scenario type not defined in scenario: {scenario_dir}")
 
         return scenario_info
 
@@ -379,7 +379,7 @@ def validate_log(data: pd.DataFrame, metric_fields: List[str]) -> None:
     if None in [
         re.fullmatch(task_name_pattern, str(task_name)) for task_name in task_names
     ]:
-        warnings.warn(
+        logger.warning(
             f"Task names do not follow expected format: <tasklabel>_<variantlabel>"
         )
 
