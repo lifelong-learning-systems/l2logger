@@ -1,4 +1,3 @@
-
 # Lifelong Learning Logger Interface/Usage
 
 ## Initialization
