@@ -31,7 +31,7 @@ from pathlib import Path
 
 from l2logger import util
 
-logger = logging.getLogger("L2Logger Aggregator")
+logger = logging.getLogger("l2logger.aggregate")
 
 
 def run():

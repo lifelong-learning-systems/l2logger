@@ -27,7 +27,7 @@ from tabulate import tabulate
 
 from l2logger import util
 
-logger = logging.getLogger("L2Logger Validator")
+logger = logging.getLogger("l2logger.validate")
 
 
 def run():
