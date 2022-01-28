@@ -2,6 +2,16 @@
 
 All notable changes to this repository are documented here. We are using [Semantic Versioning for Documents](https://semverdoc.org/), in which a version number has the format `major.minor.patch`.
 
+## 1.8.0 - 2022-01-28
+
+- Updated .gitignore
+- Added version attribute to package
+- Modified relative paths in README to absolute
+- Created workflows for building and linting
+- Updated license year
+- Converted warning messages to logging
+- Updated logging format
+
 ## 1.7.0 - 2022-01-21
 
 - Added TSV as default for log aggregator

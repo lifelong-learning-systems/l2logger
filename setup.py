@@ -6,7 +6,7 @@ HERE = pathlib.Path(__file__).parent
 
 setup(
     name="l2logger",
-    version="1.7.0",
+    version="1.8.0",
     description="Lifelong learning logger",
     long_description=(HERE / "README.md").read_text(),
     long_description_content_type="text/markdown",
@@ -14,7 +14,7 @@ setup(
     author_email="Eric.Nguyen@jhuapl.edu",
     license="MIT",
     url="https://github.com/darpa-l2m/l2logger",
-    download_url="https://github.com/darpa-l2m/l2logger/archive/release-20220121.tar.gz",
+    download_url="https://github.com/darpa-l2m/l2logger/archive/v1.8.0.tar.gz",
     classifiers=[
         "Development Status :: 3 - Alpha",
         "License :: OSI Approved :: MIT License",
