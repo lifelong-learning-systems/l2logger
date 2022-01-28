@@ -1,5 +1,5 @@
 """
-Copyright © 2021 The Johns Hopkins University Applied Physics Laboratory LLC
+Copyright © 2021-2022 The Johns Hopkins University Applied Physics Laboratory LLC
 
 Permission is hereby granted, free of charge, to any person obtaining a copy 
 of this software and associated documentation files (the “Software”), to 
@@ -31,24 +31,32 @@ from pathlib import Path
 
 from l2logger import util
 
-logger = logging.getLogger("L2Logger Aggregator")
+logger = logging.getLogger("l2logger.aggregate")
 
 
 def run():
     # Instantiate parser
     parser = argparse.ArgumentParser(
-        description='Aggregate data within a log directory from the command line')
+        description="Aggregate data within a log directory from the command line"
+    )
 
     # Log directories can be absolute paths, relative paths, or paths found in $L2DATA/logs
-    parser.add_argument('log_dir', type=str, help='Log directory of scenario')
+    parser.add_argument("log_dir", type=str, help="Log directory of scenario")
 
     # Output format
-    parser.add_argument('-f', '--format', type=str, default='tsv',
-                        choices=['tsv', 'csv', 'feather'], help='Output format of data table')
+    parser.add_argument(
+        "-f",
+        "--format",
+        type=str,
+        default="tsv",
+        choices=["tsv", "csv", "feather"],
+        help="Output format of data table",
+    )
 
     # Output filename
-    parser.add_argument('-o', '--output', type=str,
-                        default='data', help='Output filename')
+    parser.add_argument(
+        "-o", "--output", type=str, default="data", help="Output filename"
+    )
 
     # Parse arguments
     args = parser.parse_args()
@@ -58,28 +66,32 @@ def run():
     log_data = util.read_log_data(log_dir)
 
     # Filter data by completed experiences
-    log_data = log_data[log_data['exp_status'] == 'complete']
+    log_data = log_data[log_data["exp_status"] == "complete"]
 
     # Fill in regime number and sort
     log_data = util.fill_regime_num(log_data)
-    log_data = log_data.sort_values(
-        by=['regime_num', 'exp_num']).set_index("regime_num", drop=False)
+    log_data = log_data.sort_values(by=["regime_num", "exp_num"]).set_index(
+        "regime_num", drop=False
+    )
 
     # Save log data to file
-    if args.format == 'tsv':
-        log_data.to_csv(Path(args.output + '.tsv'), sep='\t', index=False)
-    elif args.format == 'csv':
-        log_data.to_csv(Path(args.output + '.csv'), index=False)
-    elif args.format == 'feather':
-        log_data.reset_index(drop=True).to_feather(
-            str(Path(args.output + '.feather')))
+    if args.format == "tsv":
+        log_data.to_csv(Path(args.output + ".tsv"), sep="\t", index=False)
+    elif args.format == "csv":
+        log_data.to_csv(Path(args.output + ".csv"), index=False)
+    elif args.format == "feather":
+        log_data.reset_index(drop=True).to_feather(str(Path(args.output + ".feather")))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Configure logger
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
 
     try:
         run()
     except (FileNotFoundError, KeyError) as e:
-        logger.exception(f'Error with aggregating logs: {e}')
+        logger.exception(f"Error with aggregating logs: {e}")
