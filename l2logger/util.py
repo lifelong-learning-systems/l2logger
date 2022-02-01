@@ -210,7 +210,7 @@ def parse_blocks(data: pd.DataFrame, include_task_params: bool = True) -> pd.Dat
 
     blocks_df = (
         data.reset_index(drop=True)
-        .groupby(cols, as_index=False)
+        .groupby(cols, as_index=False, dropna=False)
         .size()
         .rename(columns={"size": "length"})
     )
