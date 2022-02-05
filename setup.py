@@ -13,6 +13,7 @@ setup(
     author="Eric Nguyen",
     author_email="Eric.Nguyen@jhuapl.edu",
     license="MIT",
+    python_requires=">=3.6",
     url="https://github.com/darpa-l2m/l2logger",
     download_url="https://github.com/darpa-l2m/l2logger/archive/release-20220121.tar.gz",
     classifiers=[
