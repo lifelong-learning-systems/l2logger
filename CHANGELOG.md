@@ -2,6 +2,13 @@
 
 All notable changes to this repository are documented here. We are using [Semantic Versioning for Documents](https://semverdoc.org/), in which a version number has the format `major.minor.patch`.
 
+## 1.8.1 - 2022-02-11
+
+- Updated git workflows to include testing Python 3.9
+- Set minimum required Python version to 3.6
+- Changed development status to production/stable in setup.py
+- Fixed bug with dropping NaNs in block summary
+
 ## 1.8.0 - 2022-01-28
 
 - Updated .gitignore
