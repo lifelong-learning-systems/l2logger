@@ -14,8 +14,8 @@ setup(
     author_email="Eric.Nguyen@jhuapl.edu",
     license="MIT",
     python_requires=">=3.6",
-    url="https://github.com/darpa-l2m/l2logger",
-    download_url="https://github.com/darpa-l2m/l2logger/archive/v1.8.1.tar.gz",
+    url="https://github.com/lifelong-learning-systems/l2logger",
+    download_url="https://github.com/lifelong-learning-systems/l2logger/archive/v1.8.1.tar.gz",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "License :: OSI Approved :: MIT License",
