@@ -10,7 +10,7 @@ The logger produces output according to the structure below. At
 instantiation, the logger takes in `logging_base_dir` to start as the
 top-level logging directory, creating it if it doesn't exist already.
 
-```
+```text
 logging_base_dir
 └───scenario_dir
     │   logger_info.json

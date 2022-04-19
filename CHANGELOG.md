@@ -2,6 +2,11 @@
 
 All notable changes to this repository are documented here. We are using [Semantic Versioning for Documents](https://semverdoc.org/), in which a version number has the format `major.minor.patch`.
 
+## 1.8.2 - 2022-04-19
+
+- Updated URLs in setup.py after moving repo
+- Updated links in README
+
 ## 1.8.1 - 2022-02-11
 
 - Updated git workflows to include testing Python 3.9
