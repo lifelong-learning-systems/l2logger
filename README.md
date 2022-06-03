@@ -19,6 +19,7 @@
   - [Example](#validation-example)
   - [Usage](#validation-usage)
 - [Changelog](#changelog)
+- [Citing](#citing)
 - [License](#license)
 - [Acknowledgements](#acknowledgements)
 
@@ -115,6 +116,23 @@ Note: This script only validates one instance of a scenario output; it does not 
 ## Changelog
 
 See [CHANGELOG.md](https://github.com/lifelong-learning-systems/l2logger/blob/release/CHANGELOG.md) for a list of notable changes to the project.
+
+## Citing
+
+If you use this package in an academic work, it can be cited as:
+```
+misc{Nguyen2022logger,
+  author       = {Eric Nguyen},
+  title        = {{lifelong-learning-systems/l2logger: l2logger 
+                   v1.8.2-zenodo}},
+  month        = may,
+  year         = 2022,
+  publisher    = {Zenodo},
+  version      = {v1.8.2-zenodo},
+  doi          = {10.5281/zenodo.6582400},
+  url          = {https://doi.org/10.5281/zenodo.6582400}
+}
+```
 
 ## License
 
