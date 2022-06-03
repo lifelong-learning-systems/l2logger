@@ -1,5 +1,7 @@
 # Lifelong Learning Logger (L2Logger)
 
+[![DOI](https://zenodo.org/badge/298137550.svg)](https://zenodo.org/badge/latestdoi/298137550)
+
 ![APL Logo](https://github.com/lifelong-learning-systems/l2logger/raw/release/docs/apl_small_horizontal_blue.png)
 
 ## Table of Contents
